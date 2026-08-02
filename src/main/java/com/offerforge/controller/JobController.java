@@ -31,6 +31,7 @@ public class JobController {
         return jobService.getJob(id);
     }
 
+
     @DeleteMapping("/{id}")
     public String deleteJob(@PathVariable Long id) {
         jobService.deleteJob(id);

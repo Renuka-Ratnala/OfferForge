@@ -1,0 +1,57 @@
+Renuka Devi Ratnala
+B.Tech– Information Technology
+Shri Vishnu Engineering College for Women
+deviratnala13@gmail.com | GitHub | LeetCode | LinkedIn
+Education
+Bachelor of Technology (B.Tech)– Information Technology
+Shri Vishnu Engineering College for Women
+CGPA: 9.18
+Experience
+2024– 2028
+Java Developer Intern (Ongoing)
+EduSkills
+June 2026– Present
+• Developing backend applications using Java, Spring Boot, REST APIs and MySQL through industry-oriented
+projects.
+• Designing modular backend components using layered architecture, object-oriented programming principles and
+Software Development Life Cycle (SDLC).
+• Collaborating with team members using Git while strengthening backend development, API integration and
+database design skills.
+Technical Skills
+• Programming Languages: Java (Primary), Python, JavaScript, SQL, C
+• Backend Development: Spring Boot, REST APIs, Spring Security, JWT Authentication, Layered Architecture,
+SDLC
+• Web Technologies: React, HTML, CSS, JavaScript
+• Databases: PostreSql,MySQL, JDBC, SQL, Relational Database Design
+• Cloud: AWS Cloud Fundamentals, Cloud Computing Fundamentals
+• AI/ML: Machine Learning Fundamentals, Predictive Analytics, Decision Support Systems
+• Core Computer Science: Object-Oriented Programming (OOP), Data Structures Algorithms, Database Man
+agement Systems (DBMS), Operating Systems, Software Engineering Principles
+• Developer Tools: Git, GitHub, IntelliJ IDEA, VS Code, Maven
+Projects
+Smart Resume Advisor
+Live Demo | GitHub
+Java — Spring Boot — REST APIs — MySQL
+• Developed a backend resume analysis platform using Java, Spring Boot, REST APIs and MySQL.
+• Designed RESTful APIs for resume analysis, skill extraction and recommendation generation.
+• Built a resume-job matching engine that generated compatibility scores and personalized recommendations.
+• Applied object-oriented design principles and relational database modeling to create scalable and maintainable
+backend services.
+OfferForge– AI-Powered Startup Evaluation Platform Java — Spring Boot — PostgreSQL — AI/ML
+— REST APIs
+GitHub
+• Developed an AI-powered startup evaluation platform using Java, Spring Boot and PostgreSQL to support data
+driven investment and project assessment.
+• Built RESTAPIsforproject submission, risk assessment, AI-generated recommendations and dashboard analytics.
+• Designed a modular backend architecture integrating AI/ML-based decision support for project prioritization and
+market intelligence.
+• Implemented relational database design in PostgreSQL and applied layered architecture to develop scalable and
+maintainable backend services.
+Competitive Programming
+• Solved 100+ Data Structures and Algorithms problems using Java, strengthening problem-solving and complexity
+analysis across Arrays, Strings, Trees, Graphs and Binary Search.
+Achievements and Activities
+• Selected as an AQVH Semi-finalist based on technical feasibility and innovative solution design.
+• Participated in NASA Space Apps Challenge 2025, collaborating to solve real-world challenges using technology.
+• Cleared institute-level screening for Smart India Hackathon (SIH) through solution design and technical evaluation.
+• Secured 1st Place in an Idea Pitching Competition by presenting an innovative technology-based solution.docker and aws

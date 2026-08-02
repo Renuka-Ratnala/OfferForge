@@ -1,5 +1,7 @@
 package com.offerforge.controller;
 
+import com.offerforge.dto.AtsResponse;
+import com.offerforge.dto.JobRecommendationResponse;
 import com.offerforge.dto.ProfileRequest;
 import com.offerforge.dto.ProfileResponse;
 import com.offerforge.service.UserService;
@@ -11,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.RequestParam;
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
@@ -33,4 +36,15 @@ public class UserController {
 
         return userService.uploadResume(file);
     }
+    @PostMapping("/resume/analyze")
+    public AtsResponse analyzeResume(
+            @RequestParam Long jobId) throws IOException {
+
+        return userService.analyzeResume(jobId);
+    }
+    @GetMapping("/recommendations")
+    public List<JobRecommendationResponse> recommendJobs() throws IOException {
+        return userService.recommendJobs();
+    }
+
 }

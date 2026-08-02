@@ -1,16 +1,18 @@
 package com.offerforge.service;
 
-import com.offerforge.dto.ProfileResponse;
+import com.offerforge.dto.*;
+import com.offerforge.entity.Job;
 import com.offerforge.entity.User;
 import com.offerforge.repository.UserRepository;
+import com.offerforge.repository.JobRepository;
 import com.offerforge.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import com.offerforge.dto.LoginRequest;
+
+import java.util.ArrayList;
 import java.util.Optional;
 import org.springframework.security.core.context.SecurityContextHolder;
-import com.offerforge.dto.ProfileRequest;
 
 import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
@@ -20,11 +22,19 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class UserService {
+    @Autowired
+    private ResumeAnalyzerService resumeAnalyzerService;
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private JobRepository jobRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -177,6 +187,132 @@ public class UserService {
                 updatedUser.getGithubUrl(),
                 updatedUser.getResumeUrl()
         );
+    }
+    public AtsResponse analyzeResume(Long jobId) throws IOException {
+
+        // Get logged-in user
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found"));
+        String jobDescription = job.getDescription().toLowerCase();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String resumeText = resumeAnalyzerService.extractText(user.getResumeUrl());
+        List<String> skills = Arrays.stream(job.getRequiredSkills().split(","))
+                .map(String::trim)
+                .map(String::toLowerCase)
+                .toList();
+        List<String> matchedSkills = new ArrayList<>();
+        List<String> missingSkills = new ArrayList<>();
+        List<String> suggestions = new ArrayList<>();
+
+        String resumeLower = resumeText.toLowerCase();
+
+        String[] requiredSkills = job.getRequiredSkills().split(",");
+
+        for (String skill : requiredSkills) {
+
+            skill = skill.trim().toLowerCase();
+
+            if (resumeLower.contains(skill)) {
+                matchedSkills.add(skill);
+            } else {
+                missingSkills.add(skill);
+            }
+        }
+
+        int totalRequiredSkills = requiredSkills.length;
+
+        int score = 0;
+
+        if (totalRequiredSkills > 0) {
+            score = (matchedSkills.size() * 100) / totalRequiredSkills;
+        }
+        for (String skill : missingSkills) {
+
+            switch (skill) {
+
+                case "docker":
+                    suggestions.add("Add Docker projects to your resume.");
+                    break;
+
+                case "aws":
+                    suggestions.add("Gain hands-on AWS cloud experience.");
+                    break;
+
+                case "git":
+                    suggestions.add("Mention Git and GitHub collaboration.");
+                    break;
+
+                case "mysql":
+                    suggestions.add("Highlight MySQL database experience.");
+                    break;
+
+                default:
+                    suggestions.add("Improve your " + skill + " skills.");
+            }
+        }
+        System.out.println("==========================");
+        System.out.println(resumeText);
+        System.out.println("==========================");
+
+        return new AtsResponse(
+                score,
+                matchedSkills,
+                missingSkills,
+                suggestions
+        );
+
+    }
+    public List<JobRecommendationResponse> recommendJobs() throws IOException {
+
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String resumeText = resumeAnalyzerService.extractText(user.getResumeUrl())
+                .toLowerCase();
+
+        List<Job> jobs = jobRepository.findAll();
+
+        List<JobRecommendationResponse> recommendations = new ArrayList<>();
+
+        for (Job job : jobs) {
+
+            String[] requiredSkills = job.getRequiredSkills().toLowerCase().split(",");
+
+            int matched = 0;
+
+            for (String skill : requiredSkills) {
+
+                if (resumeText.contains(skill.trim())) {
+                    matched++;
+                }
+            }
+
+            int score = (matched * 100) / requiredSkills.length;
+
+            recommendations.add(
+                    new JobRecommendationResponse(
+                            job.getId(),
+                            job.getJobTitle(),
+                            job.getCompany().getCompanyName(),
+                            score
+                    )
+            );
+        }
+
+        recommendations.sort((a, b) ->
+                Integer.compare(b.getMatchScore(), a.getMatchScore()));
+
+        return recommendations;
     }
 
 

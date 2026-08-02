@@ -23,6 +23,8 @@ public class Job {
 
     @Column(length = 1000)
     private String description;
+    @Column(length = 1000)
+    private String requiredSkills;
 
     @ManyToOne
     @JoinColumn(name = "company_id")
