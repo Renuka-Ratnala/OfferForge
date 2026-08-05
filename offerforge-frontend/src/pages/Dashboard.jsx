@@ -1,98 +1,192 @@
-import Sidebar from "../components/Sidebar";
-import Navbar from "../components/Navbar";
-import StatCard from "../components/StatCard";
-import ResumeCard from "../components/ResumeCard";
-import JobCard from "../components/JobCard";
-import ChatbotButton from "../components/ChatbotButton";
 import { useState, useEffect } from "react";
+import HeroSection from "../components/HeroSection";
+import StatCard from "../components/StatCard";
+import ChatbotButton from "../components/ChatbotButton";
 import api from "../api/api";
+import DashboardStats from "../components/DashboardStats";
+import CareerProgress from "../components/CareerProgress";
+import FeaturedCompanies from "../components/FeaturedCompanies";
+
+import AICareerTips from "../components/AICareerTips";
 
 export default function Dashboard() {
-    const [analysis, setAnalysis] = useState(null);
+
     const [jobs, setJobs] = useState([]);
-    useEffect(() => {
+    const [profile, setProfile] = useState(null);
+    const [analysis, setAnalysis] = useState(null);
+    const [dashboard, setDashboard] = useState(null);
 
-        const fetchAnalysis = async () => {
 
-            try {
+     useEffect(() => {
 
-                const response = await api.post(
-                    "/users/resume/analyze?jobId=2"
-                );
+         fetchDashboard();
 
-                console.log(response.data);
+     }, []);
 
-                setAnalysis(response.data);
+    const fetchProfile = async () => {
+        try {
+            const response = await api.get("/users/profile");
+            setProfile(response.data);
+        } catch (err) {
+            console.log(err);
+        }
+    };
+    const fetchDashboard = async () => {
 
-            } catch (err) {
+        try {
 
-                console.log(err);
+            const response = await api.get("/dashboard");
 
-            }
+            console.log(response.data);
 
-        };
+            setDashboard(response.data);
 
-        fetchAnalysis();
+        } catch (err) {
 
-        const fetchJobs = async () => {
+            console.log(err);
 
-            try {
+        }
 
-                const response = await api.get("/users/recommendations");
+    };
 
-                console.log(response.data);
-
-                setJobs(response.data);
-
-            } catch (err) {
-
-                console.log(err);
-
-            }
-
-        };
-
-        fetchJobs();
-
-    }, []);
     return (
-         <div style={{ padding: "30px", flex: 1 }}>
+        <div
+            style={{
+                flex: 1,
+                padding: "40px",
+                background: "#0F172A",
+                minHeight: "100vh",
+            }}
+        >
 
-             <h1 style={{ color: "white" }}>
-                 Welcome to OfferForge
-             </h1>
 
-             <div
-                 style={{
-                     display: "grid",
-                     gridTemplateColumns: "repeat(4,1fr)",
-                     gap: "20px",
-                     marginTop: "30px"
-                 }}
-             >
-                  <StatCard
-                      title="ATS Score"
-                      value={analysis ? `${analysis.matchScore}%` : "..."}
-                  />
-                 <StatCard title="Job Matches" value="24" />
-                 <StatCard title="Skills" value="18" />
-                 <StatCard title="Interviews" value="2" />
-             </div>
 
-             <div
-                 style={{
-                     display: "grid",
-                     gridTemplateColumns: "1fr 1fr",
-                     gap: "20px",
-                     marginTop: "30px"
-                 }}
-             >
-                  <ResumeCard analysis={analysis} />
-                  <JobCard jobs={jobs} />
-             </div>
+            {/* Overview Cards */}
 
-             <ChatbotButton />
+              <HeroSection />
 
-         </div>
+               <DashboardStats
+                   stats={{
+                       resumeUploaded: dashboard?.resumeUploaded || false,
+                       atsScore: dashboard?.atsScore || 0,
+                       jobMatches: dashboard?.jobMatches || 0,
+                       profileCompletion: dashboard?.profileCompletion || 0,
+                   }}
+               />
+
+               <div
+                   style={{
+                       display:"grid",
+                       gridTemplateColumns:"2fr 1fr",
+                       gap:"25px",
+                       marginTop:"35px"
+                   }}
+               >
+
+
+
+
+
+               </div>
+
+               <div
+                   style={{
+                       display:"grid",
+                       gridTemplateColumns:"2fr 1fr",
+                       gap:"25px",
+                       marginTop:"35px"
+                   }}
+               >
+
+
+
+               </div>
+               <div
+                   style={{
+                       display:"grid",
+                       gridTemplateColumns:"2fr 1fr",
+                       gap:"25px",
+                       marginTop:"35px"
+                   }}
+               >
+
+                   <CareerProgress />
+
+                   <AICareerTips />
+
+               </div>
+
+               <div
+                   style={{
+                       marginTop:"25px"
+                   }}
+               >
+
+                   <FeaturedCompanies />
+
+               </div>
+
+              <ChatbotButton />
+
+            {/* Placeholder */}
+
+            <div
+                style={{
+                    marginTop: "40px",
+                    background: "#16213E",
+                    borderRadius: "20px",
+                    padding: "35px",
+                    color: "white",
+                }}
+            >
+
+                <h2>📈 Career Progress</h2>
+
+                <p
+                    style={{
+                        color: "#94A3B8",
+                        marginTop: "15px",
+                    }}
+                >
+                    Resume growth charts, ATS progress and career analytics
+                    will appear here.
+                </p>
+
+            </div>
+
+            <div
+                style={{
+                    marginTop: "30px",
+                    background: "#16213E",
+                    borderRadius: "20px",
+                    padding: "35px",
+                    color: "white",
+                }}
+            >
+
+                <h2>🔥 Featured Companies</h2>
+
+                <div
+                    style={{
+                        display: "flex",
+                        gap: "20px",
+                        marginTop: "20px",
+                        flexWrap: "wrap",
+                    }}
+                >
+
+                    <div>Google</div>
+                    <div>Microsoft</div>
+                    <div>Amazon</div>
+                    <div>Adobe</div>
+                    <div>Oracle</div>
+
+                </div>
+
+            </div>
+
+            <ChatbotButton />
+
+        </div>
     );
 }

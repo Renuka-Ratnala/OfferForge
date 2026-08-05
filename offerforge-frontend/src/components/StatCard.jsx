@@ -1,25 +1,53 @@
-export default function StatCard({ title, value }) {
+export default function StatCard({
+    icon,
+    title,
+    value,
+    color
+}) {
+
     return (
+
         <div
             style={{
                 background: "#16213E",
-                borderRadius: "15px",
-                padding: "20px",
-                color: "white",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.3)"
+                borderRadius: "18px",
+                padding: "25px",
+                boxShadow: "0 10px 20px rgba(0,0,0,.25)"
             }}
         >
-            <h3>{title}</h3>
 
-            <h1
+            <div
                 style={{
-                    fontSize: "32px",
-                    color: "#4DA8FF",
-                    marginTop: "10px"
+                    fontSize: "26px",
+                    marginBottom: "12px"
+                }}
+            >
+                {icon}
+            </div>
+
+            <p
+                style={{
+                    color: "#94A3B8",
+                    margin: 0,
+                    fontSize: "15px"
+                }}
+            >
+                {title}
+            </p>
+
+            <h2
+                style={{
+                    color,
+                    marginTop: "10px",
+                    marginBottom: 0,
+                    fontSize: "28px"
                 }}
             >
                 {value}
-            </h1>
+            </h2>
+
         </div>
+
     );
+
 }

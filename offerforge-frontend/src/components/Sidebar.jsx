@@ -6,44 +6,67 @@ import {
     FaUser
 } from "react-icons/fa";
 
+import { NavLink } from "react-router-dom";
+
 export default function Sidebar() {
+
+    const linkStyle = ({ isActive }) => ({
+        display: "flex",
+        alignItems: "center",
+        gap: "12px",
+        padding: "12px",
+        borderRadius: "10px",
+        color: isActive ? "#3B82F6" : "white",
+        background: isActive ? "#1E293B" : "transparent",
+        textDecoration: "none",
+        marginBottom: "10px",
+        transition: "0.3s"
+    });
 
     return (
 
-        <div className="w-64 bg-slate-900 text-white min-h-screen p-6">
+        <div
+            style={{
+                width: "240px",
+                background: "#111827",
+                color: "white",
+                padding: "30px"
+            }}
+        >
 
-            <h1 className="text-3xl font-bold mb-10">
+            <h1
+                style={{
+                    fontSize: "30px",
+                    marginBottom: "40px"
+                }}
+            >
                 OfferForge
             </h1>
 
-            <div className="space-y-6">
+            <NavLink to="/dashboard" style={linkStyle}>
+                <FaHome />
+                Dashboard
+            </NavLink>
 
-                <div className="flex items-center gap-3 cursor-pointer hover:text-blue-400">
-                    <FaHome />
-                    Dashboard
-                </div>
+            <NavLink to="/resume" style={linkStyle}>
+                <FaFileAlt />
+                Resume
+            </NavLink>
 
-                <div className="flex items-center gap-3 cursor-pointer hover:text-blue-400">
-                    <FaFileAlt />
-                    Resume
-                </div>
+            <NavLink to="/jobs" style={linkStyle}>
+                <FaBriefcase />
+                Jobs
+            </NavLink>
 
-                <div className="flex items-center gap-3 cursor-pointer hover:text-blue-400">
-                    <FaBriefcase />
-                    Jobs
-                </div>
+            <NavLink to="/ai" style={linkStyle}>
+                <FaRobot />
+                AI Coach
+            </NavLink>
 
-                <div className="flex items-center gap-3 cursor-pointer hover:text-blue-400">
-                    <FaRobot />
-                    AI Coach
-                </div>
-
-                <div className="flex items-center gap-3 cursor-pointer hover:text-blue-400">
-                    <FaUser />
-                    Profile
-                </div>
-
-            </div>
+            <NavLink to="/profile" style={linkStyle}>
+                <FaUser />
+                Profile
+            </NavLink>
 
         </div>
 
