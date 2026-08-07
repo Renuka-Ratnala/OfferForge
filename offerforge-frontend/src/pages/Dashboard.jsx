@@ -11,9 +11,7 @@ import AICareerTips from "../components/AICareerTips";
 
 export default function Dashboard() {
 
-    const [jobs, setJobs] = useState([]);
-    const [profile, setProfile] = useState(null);
-    const [analysis, setAnalysis] = useState(null);
+
     const [dashboard, setDashboard] = useState(null);
 
 
@@ -128,64 +126,6 @@ export default function Dashboard() {
 
               <ChatbotButton />
 
-            {/* Placeholder */}
-
-            <div
-                style={{
-                    marginTop: "40px",
-                    background: "#16213E",
-                    borderRadius: "20px",
-                    padding: "35px",
-                    color: "white",
-                }}
-            >
-
-                <h2>📈 Career Progress</h2>
-
-                <p
-                    style={{
-                        color: "#94A3B8",
-                        marginTop: "15px",
-                    }}
-                >
-                    Resume growth charts, ATS progress and career analytics
-                    will appear here.
-                </p>
-
-            </div>
-
-            <div
-                style={{
-                    marginTop: "30px",
-                    background: "#16213E",
-                    borderRadius: "20px",
-                    padding: "35px",
-                    color: "white",
-                }}
-            >
-
-                <h2>🔥 Featured Companies</h2>
-
-                <div
-                    style={{
-                        display: "flex",
-                        gap: "20px",
-                        marginTop: "20px",
-                        flexWrap: "wrap",
-                    }}
-                >
-
-                    <div>Google</div>
-                    <div>Microsoft</div>
-                    <div>Amazon</div>
-                    <div>Adobe</div>
-                    <div>Oracle</div>
-
-                </div>
-
-            </div>
-
-            <ChatbotButton />
 
         </div>
     );

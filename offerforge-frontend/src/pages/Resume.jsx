@@ -1,12 +1,21 @@
 import { useState, useEffect } from "react";
 import api from "../api/api";
 
+import ResumeOverview from "../components/ResumeOverview";
+import ATSGauge from "../components/ATSGauge";
+import ResumeHealth from "../components/ResumeHealth";
+import AIResumeSuggestions from "../components/AIResumeSuggestions";
+
 export default function Resume() {
 
     const [file, setFile] = useState(null);
-    const [message, setMessage] = useState("");
-    const [loading, setLoading] = useState(false);
     const [profile, setProfile] = useState(null);
+    const [analysis, setAnalysis] = useState(null);
+
+    useEffect(() => {
+        fetchProfile();
+        fetchAnalysis();
+    }, []);
 
     const fetchProfile = async () => {
         try {
@@ -17,44 +26,55 @@ export default function Resume() {
         }
     };
 
-    useEffect(() => {
-        fetchProfile();
-    }, []);
+     const fetchAnalysis = async () => {
+         try {
+             const response = await api.get(
+                 "/users/resume/analyze"
+             );
+
+             console.log(response.data);
+
+             setAnalysis(response.data);
+
+         } catch (err) {
+             console.log(err);
+         }
+     };
 
     const uploadResume = async () => {
 
         if (!file) {
-            alert("Please select a PDF.");
+            alert("Please select a resume.");
             return;
         }
-
-        setLoading(true);
 
         const formData = new FormData();
         formData.append("file", file);
 
         try {
 
-            await api.post("/users/resume", formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data"
+            await api.post(
+                "/users/resume",
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data"
+                    }
                 }
-            });
+            );
 
             fetchProfile();
+            fetchAnalysis();
 
-            setMessage("✅ Resume uploaded successfully.");
-
-            setFile(null);
+            alert("Resume uploaded successfully!");
 
         } catch (err) {
 
             console.log(err);
-            setMessage("❌ Upload failed.");
+            alert("Upload failed.");
 
         }
 
-        setLoading(false);
     };
 
     return (
@@ -62,16 +82,17 @@ export default function Resume() {
         <div
             style={{
                 padding: "40px",
-                color: "white",
-                maxWidth: "700px",
-                margin: "auto"
+                maxWidth: "1200px",
+                margin: "0 auto",
+                color: "white"
             }}
         >
 
             <h1
                 style={{
                     fontSize: "36px",
-                    fontWeight: "bold"
+                    fontWeight: "700",
+                    marginBottom: "10px"
                 }}
             >
                 Resume Manager 📄
@@ -80,120 +101,68 @@ export default function Resume() {
             <p
                 style={{
                     color: "#94A3B8",
-                    marginTop: "10px",
-                    marginBottom: "30px"
+                    marginBottom: "35px"
                 }}
             >
                 Upload, replace and optimize your resume for better ATS scores.
             </p>
 
+            {/* Top Section */}
+
             <div
                 style={{
-                    background: "#16213E",
-                    padding: "25px",
-                    borderRadius: "15px",
+                    display: "grid",
+                    gridTemplateColumns: "2fr 1fr",
+                    gap: "25px",
+                    marginBottom: "30px"
+                }}
+            >
+            <ResumeHealth />
+
+            <div style={{ marginTop: "30px" }}>
+
+                <AIResumeSuggestions
+                    suggestions={analysis?.suggestion}
+                />
+
+            </div>
+
+                <ResumeOverview
+                    profile={profile}
+                    file={file}
+                    setFile={setFile}
+                    uploadResume={uploadResume}
+                />
+
+                <ATSGauge
+                    score={analysis?.matchScore}
+                />
+
+            </div>
+
+            {/* Skills */}
+
+            <div
+                style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "25px",
                     marginBottom: "30px"
                 }}
             >
 
-                <h2>📄 Current Resume</h2>
 
-                <p
-                    style={{
-                        marginTop: "15px",
-                        fontSize: "16px"
-                    }}
-                >
-                    {profile?.resumeUrl
-                        ? profile.resumeUrl.split(/[\\/]/).pop()
-                        : "No Resume Uploaded"}
-                </p>
-
-                <p
-                    style={{
-                        color: profile?.resumeUrl ? "#22C55E" : "#EF4444",
-                        fontWeight: "bold",
-                        marginTop: "10px"
-                    }}
-                >
-                    {profile?.resumeUrl
-                        ? "✅ Uploaded Successfully"
-                        : "❌ Not Uploaded"}
-                </p>
 
             </div>
 
-            <div
-                style={{
-                    background: "#16213E",
-                    padding: "35px",
-                    borderRadius: "15px",
-                    border: "2px dashed #2563EB",
-                    textAlign: "center"
-                }}
-            >
+            {/* AI Suggestions */}
 
-                <h2>
-                    {profile?.resumeUrl
-                        ? "Replace Resume"
-                        : "Upload Resume"}
-                </h2>
-
-                <br />
-
-                {file && (
-                    <>
-                        <p>Selected File</p>
-                        <b>{file.name}</b>
-                        <br /><br />
-                    </>
-                )}
-
-                <input
-                    type="file"
-                    accept=".pdf"
-                    onChange={(e) => setFile(e.target.files[0])}
-                />
-
-                <br /><br />
-
-                <button
-                    onClick={uploadResume}
-                    disabled={loading}
-                    style={{
-                        background: "#2563EB",
-                        color: "white",
-                        border: "none",
-                        padding: "12px 35px",
-                        borderRadius: "10px",
-                        cursor: "pointer",
-                        fontSize: "16px"
-                    }}
-                >
-                    {loading
-                        ? "Uploading..."
-                        : profile?.resumeUrl
-                            ? "Replace Resume"
-                            : "Upload Resume"}
-                </button>
-
-            </div>
-
-            {message && (
-                <div
-                    style={{
-                        marginTop: "25px",
-                        background: "#1F2937",
-                        padding: "15px",
-                        borderRadius: "10px",
-                        textAlign: "center"
-                    }}
-                >
-                    {message}
-                </div>
-            )}
+            <AIResumeSuggestions
+                suggestions={analysis?.suggestion}
+            />
 
         </div>
 
     );
+
 }
