@@ -36,15 +36,23 @@ public class UserController {
 
         return userService.uploadResume(file);
     }
-    @PostMapping("/resume/analyze")
-    public AtsResponse analyzeResume(
-            @RequestParam Long jobId) throws IOException {
+    @GetMapping("/resume/analyze")
+    public AtsResponse analyzeResume() throws IOException {
 
-        return userService.analyzeResume(jobId);
+        return userService.analyzeResume();
+
     }
     @GetMapping("/recommendations")
     public List<JobRecommendationResponse> recommendJobs() throws IOException {
         return userService.recommendJobs();
+    }
+    @PostMapping("/resume/analyze/{jobId}")
+    public AtsResponse analyzeJob(
+            @PathVariable Long jobId
+    ) throws IOException {
+
+        return userService.analyzeJob(jobId);
+
     }
 
 }

@@ -18,4 +18,7 @@ public class AtsResponse {
     private List<String> missingSkills;
 
     private List<String> suggestions;
+
+    private ResumeHealthResponse resumeHealth;
+
 }

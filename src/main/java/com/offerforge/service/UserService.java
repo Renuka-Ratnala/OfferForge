@@ -188,7 +188,7 @@ public class UserService {
                 updatedUser.getResumeUrl()
         );
     }
-    public AtsResponse analyzeResume(Long jobId) throws IOException {
+    public AtsResponse analyzeJob(Long jobId) throws IOException {
 
         // Get logged-in user
         String email = SecurityContextHolder.getContext()
@@ -259,12 +259,22 @@ public class UserService {
         System.out.println("==========================");
         System.out.println(resumeText);
         System.out.println("==========================");
+        ResumeHealthResponse health = new ResumeHealthResponse(
+                true,
+                true,
+                true,
+                true,
+                false,
+                false,
+                resumeLower.contains("github")
+        );
 
         return new AtsResponse(
                 score,
                 matchedSkills,
                 missingSkills,
-                suggestions
+                suggestions,
+                health
         );
 
     }
@@ -299,13 +309,88 @@ public class UserService {
 
             int score = (matched * 100) / requiredSkills.length;
 
+
+
+                    List<String> matchedSkills = new ArrayList<>();
+            List<String> missingSkills = new ArrayList<>();
+
+            for (String skill : requiredSkills) {
+
+                skill = skill.trim();
+
+                if (resumeText.contains(skill)) {
+
+                    matchedSkills.add(skill);
+
+                } else {
+
+                    missingSkills.add(skill);
+
+                }
+
+            }
+
+            String recommendation;
+
+            String chance;
+
+            if (score >= 80) {
+
+                recommendation =
+                        "Excellent match. Tailor your resume and apply immediately.";
+
+                chance = "High";
+
+            }
+            else if (score >= 60) {
+
+                recommendation =
+                        "Good match. Improve the missing skills before applying.";
+
+                chance = "Medium";
+
+            }
+            else {
+
+                recommendation =
+                        "Build the missing skills first, then apply.";
+
+                chance = "Low";
+
+            }
+
             recommendations.add(
+
                     new JobRecommendationResponse(
+
                             job.getId(),
+
                             job.getJobTitle(),
+
                             job.getCompany().getCompanyName(),
-                            score
+
+                            job.getLocation(),
+
+                            job.getJobType(),
+
+                            job.getSalary(),
+
+                            job.getDescription(),
+
+                            job.getRequiredSkills(),
+
+                            score,
+
+                            matchedSkills,
+
+                            missingSkills,
+
+                            recommendation,
+
+                            chance
+
                     )
+
             );
         }
 
@@ -313,6 +398,89 @@ public class UserService {
                 Integer.compare(b.getMatchScore(), a.getMatchScore()));
 
         return recommendations;
+    }
+    public AtsResponse analyzeResume() throws IOException {
+
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String resumeText =
+                resumeAnalyzerService.extractText(user.getResumeUrl());
+
+        resumeText = resumeText.toLowerCase();
+
+        int score = 100;
+
+        List<String> suggestions = new ArrayList<>();
+
+        if (!resumeText.contains("github")) {
+            score -= 10;
+            suggestions.add("Add your GitHub profile.");
+        }
+
+        if (!resumeText.contains("linkedin")) {
+            score -= 10;
+            suggestions.add("Add your LinkedIn profile.");
+        }
+
+        if (!resumeText.contains("project")) {
+            score -= 15;
+            suggestions.add("Include at least one project.");
+        }
+
+        if (!resumeText.contains("certificate")
+                && !resumeText.contains("certification")) {
+
+            score -= 10;
+            suggestions.add("Mention your certifications.");
+
+        }
+
+        if (!resumeText.contains("achievement")) {
+
+            score -= 10;
+            suggestions.add("Include achievements or awards.");
+
+        }
+
+        if (resumeText.length() < 1200) {
+
+            score -= 10;
+            suggestions.add("Expand your resume with more technical details.");
+
+        }
+
+        if (score < 0) {
+            score = 0;
+        }
+        ResumeHealthResponse health = new ResumeHealthResponse(
+                resumeText.contains("email") || resumeText.contains("@"),
+                resumeText.contains("education"),
+                resumeText.contains("skill"),
+                resumeText.contains("project"),
+                resumeText.contains("achievement"),
+                resumeText.contains("certificate")
+                        || resumeText.contains("certification"),
+                resumeText.contains("github")
+        );
+
+        return new AtsResponse(
+
+                score,
+
+                new ArrayList<>(),
+
+                new ArrayList<>(),
+
+                suggestions,
+                health
+
+        );
+
     }
 
 
