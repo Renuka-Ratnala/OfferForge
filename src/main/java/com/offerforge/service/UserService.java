@@ -45,22 +45,7 @@ public class UserService {
 
         return userRepository.save(user);
     }
-    public String login(LoginRequest request) {
 
-        Optional<User> optionalUser = userRepository.findByEmail(request.getEmail());
-
-        if (optionalUser.isEmpty()) {
-            return "User not found";
-        }
-
-        User user = optionalUser.get();
-
-        if (passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            return "Login Successful";
-        }
-
-        return "Invalid Password";
-    }
     @Autowired
     private JwtUtil jwtUtil;
     public String login(String email, String password) {

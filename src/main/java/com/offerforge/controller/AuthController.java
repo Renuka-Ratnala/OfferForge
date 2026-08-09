@@ -4,6 +4,7 @@ import com.offerforge.dto.LoginResponse;
 import com.offerforge.entity.User;
 import com.offerforge.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.offerforge.dto.LoginRequest;
 
@@ -16,8 +17,9 @@ public class AuthController {
     private UserService userService;
 
     @PostMapping("/register")
-    public User register(@RequestBody User user) {
-        return userService.register(user);
+    public ResponseEntity<String> register(@RequestBody User user) {
+        userService.register(user);
+        return ResponseEntity.ok("Registration successful");
     }
     @PostMapping("/login")
     public LoginResponse login(@RequestBody LoginRequest request) {
