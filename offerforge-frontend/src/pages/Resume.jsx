@@ -6,6 +6,8 @@ import ATSGauge from "../components/ATSGauge";
 import ResumeHealth from "../components/ResumeHealth";
 import AIResumeSuggestions from "../components/AIResumeSuggestions";
 
+import "./Resume.css";
+
 export default function Resume() {
 
     const [file, setFile] = useState(null);
@@ -17,39 +19,51 @@ export default function Resume() {
         fetchAnalysis();
     }, []);
 
+    // Fetch user profile
     const fetchProfile = async () => {
         try {
+
             const response = await api.get("/users/profile");
+
             setProfile(response.data);
+
         } catch (err) {
-            console.log(err);
+
+            console.log("Profile fetch error:", err);
+
         }
     };
 
-     const fetchAnalysis = async () => {
-         try {
-             const response = await api.get(
-                 "/users/resume/analyze"
-             );
+    // Fetch resume analysis
+    const fetchAnalysis = async () => {
+        try {
 
-             console.log(response.data);
+            const response = await api.get(
+                "/users/resume/analyze"
+            );
 
-             setAnalysis(response.data);
+            console.log("Resume analysis:", response.data);
 
-         } catch (err) {
-             console.log(err);
-         }
-     };
+            setAnalysis(response.data);
 
-    const uploadResume = async () => {
+        } catch (err) {
 
-        if (!file) {
+            console.log("Resume analysis error:", err);
+
+        }
+    };
+
+    // Upload resume
+    const uploadResume = async (selectedFile) => {
+
+        if (!selectedFile) {
             alert("Please select a resume.");
             return;
         }
 
         const formData = new FormData();
-        formData.append("file", file);
+
+        formData.append("file", selectedFile);
 
         try {
 
@@ -63,103 +77,102 @@ export default function Resume() {
                 }
             );
 
-            fetchProfile();
-            fetchAnalysis();
+            setFile(selectedFile);
+
+            await fetchProfile();
+            await fetchAnalysis();
 
             alert("Resume uploaded successfully!");
 
         } catch (err) {
 
-            console.log(err);
+            console.log("Resume upload error:", err);
+
             alert("Upload failed.");
 
         }
-
     };
 
     return (
 
-        <div
-            style={{
-                padding: "40px",
-                maxWidth: "1200px",
-                margin: "0 auto",
-                color: "white"
-            }}
-        >
+        <div className="resume-page">
 
-            <h1
-                style={{
-                    fontSize: "36px",
-                    fontWeight: "700",
-                    marginBottom: "10px"
-                }}
-            >
-                Resume Manager 📄
-            </h1>
+            {/* ================= HEADER ================= */}
 
-            <p
-                style={{
-                    color: "#94A3B8",
-                    marginBottom: "35px"
-                }}
-            >
-                Upload, replace and optimize your resume for better ATS scores.
-            </p>
+            <div className="resume-header">
 
-            {/* Top Section */}
+                <h1>
+                    Resume Manager <span>📄</span>
+                </h1>
 
-            <div
-                style={{
-                    display: "grid",
-                    gridTemplateColumns: "2fr 1fr",
-                    gap: "25px",
-                    marginBottom: "30px"
-                }}
-            >
-            <ResumeHealth />
+                <p>
+                    Upload, analyze and optimize your resume for better ATS scores.
+                </p>
 
-            <div style={{ marginTop: "30px" }}>
+            </div>
+
+
+            {/* ================= MAIN RESUME GRID ================= */}
+
+            <div className="resume-main-grid">
+
+                {/* ================= RESUME HEALTH ================= */}
+
+                <div className="resume-panel resume-health-panel">
+
+                    <div className="section-heading">
+
+                        <h2>
+                            Resume Health
+                        </h2>
+
+                        <p>
+                            Understand how strong your resume is and where it can improve.
+                        </p>
+
+                    </div>
+
+                    <ResumeHealth />
+
+                </div>
+
+
+                {/* ================= CURRENT RESUME ================= */}
+
+                <div className="resume-panel">
+
+                    <ResumeOverview
+                        profile={profile}
+                        file={file}
+                        setFile={setFile}
+                        uploadResume={uploadResume}
+                    />
+
+                </div>
+
+
+                {/* ================= ATS SCORE ================= */}
+
+                <div className="resume-panel">
+
+                    <ATSGauge
+                        score={analysis?.matchScore || 0}
+                    />
+
+                </div>
+
+            </div>
+
+
+            {/* ================= AI RESUME COACH ================= */}
+
+            <div className="resume-section">
 
                 <AIResumeSuggestions
                     suggestions={analysis?.suggestion}
                 />
 
             </div>
-
-                <ResumeOverview
-                    profile={profile}
-                    file={file}
-                    setFile={setFile}
-                    uploadResume={uploadResume}
-                />
-
-                <ATSGauge
-                    score={analysis?.matchScore}
-                />
-
-            </div>
-
-            {/* Skills */}
-
-            <div
-                style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "25px",
-                    marginBottom: "30px"
-                }}
-            >
-
-
-
-            </div>
-
-            {/* AI Suggestions */}
-
-            <AIResumeSuggestions
-                suggestions={analysis?.suggestion}
-            />
 
         </div>
 

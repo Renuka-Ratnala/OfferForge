@@ -5,96 +5,68 @@ export default function ResumeOverview({
     uploadResume
 }) {
 
+    const resumeName = profile?.resumeUrl
+        ? profile.resumeUrl.split(/[\\/]/).pop()
+        : "No Resume Uploaded";
+
     return (
 
-        <div
-            style={{
-                background:"#16213E",
-                borderRadius:"18px",
-                padding:"30px",
-                display:"flex",
-                justifyContent:"space-between",
-                alignItems:"center",
-                marginBottom:"30px"
-            }}
-        >
+        <div className="resume-overview">
 
-            <div>
+            <div className="resume-overview-content">
 
-                <h2
-                    style={{
-                        color:"white"
-                    }}
-                >
-                    Current Resume
-                </h2>
+                <div className="resume-icon">
+                    📄
+                </div>
 
-                 <p
-                     style={{
-                         color: "#CBD5E1",
-                         marginTop: "15px",
-                         maxWidth: "250px",
-                         overflow: "hidden",
-                         textOverflow: "ellipsis",
-                         whiteSpace: "nowrap"
-                     }}
-                 >
-                     📄 {profile?.resumeUrl
-                         ? profile.resumeUrl.split(/[\\/]/).pop()
-                         : "No Resume Uploaded"}
-                 </p>
+                <div>
 
-                <p
-                    style={{
-                        color:
+                    <h2>Current Resume</h2>
+
+                    <p className="resume-file-name">
+                        {resumeName}
+                    </p>
+
+                    <p
+                        className={
                             profile?.resumeUrl
-                            ? "#22C55E"
-                            : "#EF4444"
-                    }}
-                >
-                    {
-                        profile?.resumeUrl
-                        ? "Uploaded Successfully"
-                        : "Not Uploaded"
-                    }
-                </p>
+                                ? "resume-status uploaded"
+                                : "resume-status not-uploaded"
+                        }
+                    >
+                        {profile?.resumeUrl
+                            ? "✓ Uploaded Successfully"
+                            : "✕ No Resume Uploaded"}
+                    </p>
+
+                </div>
 
             </div>
 
+
             <div>
 
-                 <input
-                     id="resumeUpload"
-                     type="file"
-                     accept=".pdf"
-                     style={{ display: "none" }}
-                     onChange={(e) => {
+                <input
+                    id="resumeUpload"
+                    type="file"
+                    accept=".pdf"
+                    className="resume-file-input"
+                    onChange={(e) => {
 
-                         const selectedFile = e.target.files[0];
+                        const selectedFile = e.target.files[0];
 
-                         if (!selectedFile) return;
+                        if (!selectedFile) return;
 
-                         setFile(selectedFile);
+                        setFile(selectedFile);
 
-                         uploadResume(selectedFile);
+                        uploadResume(selectedFile);
 
-                     }}
-                 />
-
+                    }}
+                />
 
                 <label
                     htmlFor="resumeUpload"
-                     style={{
-                         background: "#2563EB",
-                         color: "white",
-                         padding: "14px 24px",
-                         borderRadius: "12px",
-                         cursor: "pointer",
-                         display: "inline-block",
-                         whiteSpace: "nowrap",
-                         minWidth: "180px",
-                         textAlign: "center"
-                     }}
+                    className="replace-resume-button"
                 >
                     📄 Replace Resume
                 </label>
@@ -104,5 +76,4 @@ export default function ResumeOverview({
         </div>
 
     );
-
 }

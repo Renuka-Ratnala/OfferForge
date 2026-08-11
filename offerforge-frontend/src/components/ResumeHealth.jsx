@@ -10,59 +10,78 @@ export default function ResumeHealth() {
         { title: "GitHub Portfolio", status: "missing" }
     ];
 
+    const statusConfig = {
+        good: {
+            icon: "✓",
+            label: "Good"
+        },
+        warning: {
+            icon: "!",
+            label: "Needs attention"
+        },
+        missing: {
+            icon: "×",
+            label: "Missing"
+        }
+    };
+
     return (
 
-        <div
-            style={{
-                background: "#16213E",
-                borderRadius: "18px",
-                padding: "25px"
-            }}
-        >
+        <div className="resume-health">
 
-            <h2 style={{ color: "white" }}>
-                📋 Resume Health
-            </h2>
+            <div className="resume-health-header">
 
-            <div
-                style={{
-                    marginTop: "20px",
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "15px"
-                }}
-            >
+                <div>
+                    <h2>
+                        📋 Resume Health
+                    </h2>
 
-                {items.map((item) => (
+                    <p>
+                        Check the important sections of your resume.
+                    </p>
+                </div>
 
-                    <div
-                        key={item.title}
-                        style={{
-                            color:
-                                item.status === "good"
-                                    ? "#22C55E"
-                                    : item.status === "warning"
-                                    ? "#F59E0B"
-                                    : "#EF4444"
-                        }}
-                    >
+            </div>
 
-                        {item.status === "good"
-                            ? "✅"
-                            : item.status === "warning"
-                            ? "⚠️"
-                            : "❌"}{" "}
 
-                        {item.title}
+            <div className="health-grid">
 
-                    </div>
+                {items.map((item) => {
 
-                ))}
+                    const config = statusConfig[item.status];
+
+                    return (
+
+                        <div
+                            key={item.title}
+                            className={`health-item ${item.status}`}
+                        >
+
+                            <div className="health-icon">
+                                {config.icon}
+                            </div>
+
+                            <div className="health-info">
+
+                                <h3>
+                                    {item.title}
+                                </h3>
+
+                                <span>
+                                    {config.label}
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    );
+
+                })}
 
             </div>
 
         </div>
 
     );
-
 }

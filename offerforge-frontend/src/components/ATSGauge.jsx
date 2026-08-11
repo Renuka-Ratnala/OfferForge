@@ -1,72 +1,30 @@
 export default function ATSGauge({ score }) {
 
-    const percentage = score || 0;
+    const percentage = Math.min(Math.max(score || 0, 0), 100);
 
     return (
 
-        <div
-            style={{
-                background: "#16213E",
-                borderRadius: "18px",
-                padding: "30px",
-                textAlign: "center"
-            }}
-        >
+        <div className="ats-gauge-card">
 
-            <h2
-                style={{
-                    color: "white",
-                    marginBottom: "25px"
-                }}
-            >
-                ATS Score
-            </h2>
+            <h2>ATS Score</h2>
 
             <div
+                className="ats-circle"
                 style={{
-                    width: "180px",
-                    height: "180px",
-                    margin: "auto",
-                    borderRadius: "50%",
                     background: `conic-gradient(
-                        #2563EB ${percentage * 3.6}deg,
-                        #23324E 0deg
-                    )`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center"
+                        #8b5cf6 ${percentage * 3.6}deg,
+                        #252d42 0deg
+                    )`
                 }}
             >
 
-                <div
-                    style={{
-                        width: "140px",
-                        height: "140px",
-                        borderRadius: "50%",
-                        background: "#0F172A",
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "center",
-                        alignItems: "center"
-                    }}
-                >
+                <div className="ats-circle-inner">
 
-                    <h1
-                        style={{
-                            color: "#38BDF8",
-                            margin: 0,
-                            fontSize: "42px"
-                        }}
-                    >
+                    <h1>
                         {percentage}%
                     </h1>
 
-                    <p
-                        style={{
-                            color: "#94A3B8",
-                            marginTop: "8px"
-                        }}
-                    >
+                    <p>
                         ATS Score
                     </p>
 
@@ -74,8 +32,20 @@ export default function ATSGauge({ score }) {
 
             </div>
 
+            <div className="ats-status">
+
+                {percentage >= 80
+                    ? "Excellent match"
+                    : percentage >= 60
+                        ? "Good match"
+                        : percentage > 0
+                            ? "Needs improvement"
+                            : "Upload your resume"
+                }
+
+            </div>
+
         </div>
 
     );
-
 }

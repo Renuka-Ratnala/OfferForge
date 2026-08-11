@@ -8,68 +8,83 @@ import {
 
 import { NavLink } from "react-router-dom";
 
-export default function Sidebar() {
+import "./Sidebar.css";
 
-    const linkStyle = ({ isActive }) => ({
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
-        padding: "12px",
-        borderRadius: "10px",
-        color: isActive ? "#3B82F6" : "white",
-        background: isActive ? "#1E293B" : "transparent",
-        textDecoration: "none",
-        marginBottom: "10px",
-        transition: "0.3s"
-    });
+export default function Sidebar() {
 
     return (
 
-        <div
-            style={{
-                width: "240px",
-                background: "#111827",
-                color: "white",
-                padding: "30px"
-            }}
-        >
+        <aside className="sidebar">
 
-            <h1
-                style={{
-                    fontSize: "30px",
-                    marginBottom: "40px"
-                }}
-            >
-                OfferForge
-            </h1>
+            {/* Logo */}
 
-            <NavLink to="/dashboard" style={linkStyle}>
-                <FaHome />
-                Dashboard
-            </NavLink>
+            <div className="sidebar-logo">
 
-            <NavLink to="/resume" style={linkStyle}>
-                <FaFileAlt />
-                Resume
-            </NavLink>
+                <div className="logo-icon">
+                    ✦
+                </div>
 
-            <NavLink to="/jobs" style={linkStyle}>
-                <FaBriefcase />
-                Jobs
-            </NavLink>
+                <div className="logo-text">
+                    Offer<span>Forge</span>
+                </div>
 
-            <NavLink to="/ai" style={linkStyle}>
-                <FaRobot />
-                AI Coach
-            </NavLink>
+            </div>
 
-            <NavLink to="/profile" style={linkStyle}>
-                <FaUser />
-                Profile
-            </NavLink>
 
-        </div>
+            {/* Navigation */}
+
+            <nav className="sidebar-nav">
+
+                <NavLink
+                    to="/dashboard"
+                    className="sidebar-link"
+                >
+                    <FaHome />
+                    <span>Dashboard</span>
+                </NavLink>
+
+
+                <NavLink
+                    to="/resume"
+                    className="sidebar-link"
+                >
+                    <FaFileAlt />
+                    <span>Resume</span>
+                </NavLink>
+
+
+                <NavLink
+                    to="/jobs"
+                    className="sidebar-link"
+                >
+                    <FaBriefcase />
+                    <span>Jobs</span>
+                </NavLink>
+
+
+                <NavLink
+                    to="/ai"
+                    className="sidebar-link"
+                >
+                    <FaRobot />
+                    <span>AI Coach</span>
+                </NavLink>
+
+
+                <NavLink
+                    to="/profile"
+                    className="sidebar-link"
+                >
+                    <FaUser />
+                    <span>Profile</span>
+                </NavLink>
+
+            </nav>
+
+
+
+
+        </aside>
 
     );
-
 }

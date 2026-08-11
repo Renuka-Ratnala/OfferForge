@@ -1,0 +1,308 @@
+/* =========================================
+   JOBS PAGE
+========================================= */
+
+.jobs-page {
+    width: 100%;
+    min-height: 100vh;
+    color: #f8fafc;
+    font-family: Inter, Arial, sans-serif;
+    box-sizing: border-box;
+}
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.jobs-header {
+    margin-bottom: 25px;
+}
+
+.jobs-header h1 {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 700;
+    color: #f8fafc;
+}
+
+.jobs-header h1 span {
+    margin-left: 6px;
+}
+
+.jobs-header p {
+    margin: 8px 0 0;
+    color: #94a3b8;
+    font-size: 15px;
+}
+
+
+/* =========================================
+   SEARCH
+========================================= */
+
+.jobs-search {
+    width: 100%;
+    height: 52px;
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 0 16px;
+    box-sizing: border-box;
+
+    background: #0b1120;
+    border: 1px solid #20283a;
+    border-radius: 12px;
+
+    margin-bottom: 22px;
+
+    transition: 0.2s ease;
+}
+
+.jobs-search:focus-within {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+}
+
+.jobs-search > span {
+    color: #94a3b8;
+    font-size: 25px;
+}
+
+.jobs-search input {
+    width: 100%;
+
+    border: none;
+    outline: none;
+
+    background: transparent;
+    color: #f8fafc;
+
+    font-size: 14px;
+}
+
+.jobs-search input::placeholder {
+    color: #64748b;
+}
+
+
+/* =========================================
+   STATS
+========================================= */
+
+.jobs-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+
+    margin-bottom: 25px;
+}
+
+.job-stat-card {
+    min-height: 100px;
+
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+    padding: 20px;
+
+    box-sizing: border-box;
+
+    background: #111827;
+    border: 1px solid #1e293b;
+    border-radius: 15px;
+}
+
+.job-stat-icon {
+    width: 45px;
+    height: 45px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 11px;
+
+    font-size: 20px;
+}
+
+.job-stat-card p {
+    margin: 0;
+
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+.job-stat-card h2 {
+    margin: 5px 0 0;
+
+    font-size: 25px;
+}
+
+
+/* Purple */
+
+.purple-stat .job-stat-icon {
+    background: rgba(139, 92, 246, 0.15);
+}
+
+.purple-stat h2 {
+    color: #a78bfa;
+}
+
+
+/* Blue */
+
+.blue-stat .job-stat-icon {
+    background: rgba(59, 130, 246, 0.15);
+}
+
+.blue-stat h2 {
+    color: #60a5fa;
+}
+
+
+/* Green */
+
+.green-stat .job-stat-icon {
+    background: rgba(34, 197, 94, 0.15);
+}
+
+.green-stat h2 {
+    color: #4ade80;
+}
+
+
+/* =========================================
+   JOB SECTION
+========================================= */
+
+.jobs-section {
+    background: #111827;
+    border: 1px solid #1e293b;
+    border-radius: 16px;
+
+    padding: 22px;
+    box-sizing: border-box;
+}
+
+.jobs-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 20px;
+}
+
+.jobs-section-header h2 {
+    margin: 0;
+
+    color: #f8fafc;
+    font-size: 18px;
+}
+
+.jobs-section-header p {
+    margin: 6px 0 0;
+
+    color: #64748b;
+    font-size: 13px;
+}
+
+.jobs-count {
+    padding: 7px 11px;
+
+    border-radius: 20px;
+
+    background: rgba(139, 92, 246, 0.12);
+    color: #a78bfa;
+
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+
+/* =========================================
+   EMPTY STATE
+========================================= */
+
+.no-jobs {
+    min-height: 220px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+
+    border: 1px dashed #273044;
+    border-radius: 12px;
+
+    padding: 30px;
+}
+
+.no-jobs-icon {
+    width: 55px;
+    height: 55px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 14px;
+
+    background: rgba(139, 92, 246, 0.12);
+
+    font-size: 24px;
+
+    margin-bottom: 15px;
+}
+
+.no-jobs h3 {
+    margin: 0;
+
+    color: #e2e8f0;
+    font-size: 16px;
+}
+
+.no-jobs p {
+    margin: 7px 0 0;
+
+    color: #64748b;
+    font-size: 13px;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 900px) {
+
+    .jobs-stats {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+
+@media (max-width: 700px) {
+
+    .jobs-header h1 {
+        font-size: 27px;
+    }
+
+    .jobs-section {
+        padding: 18px;
+    }
+
+    .jobs-section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+}

@@ -1,319 +1,156 @@
-import { useState } from "react";
-import { registerUser } from "../services/authService";
-import { useNavigate } from "react-router-dom";
-import "./Register.css";
-export default function Register() {
-    const navigate = useNavigate();
+import { useState, useEffect } from "react";
+import api from "../api/api";
 
-    const [formData, setFormData] = useState({
-        fullName: "",
-        email: "",
-        password: "",
-        phone: "",
-        location: "",
-        college: "",
-        branch: "",
-        graduationYear: "",
-        skills: "",
-        linkedinUrl: "",
-        githubUrl: "",
-        resumeUrl: ""
-    });
+import ResumeOverview from "../components/ResumeOverview";
+import ATSGauge from "../components/ATSGauge";
+import ResumeHealth from "../components/ResumeHealth";
+ 
+import "./Resume.css";
 
-    const [message, setMessage] = useState("");
-    const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false);
+export default function Resume() {
 
-    const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
+    const [file, setFile] = useState(null);
+    const [profile, setProfile] = useState(null);
+    const [analysis, setAnalysis] = useState(null);
+
+    useEffect(() => {
+        fetchProfile();
+        fetchAnalysis();
+    }, []);
+
+    const fetchProfile = async () => {
+        try {
+            const response = await api.get("/users/profile");
+            setProfile(response.data);
+        } catch (err) {
+            console.log(err);
+        }
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        setMessage("");
-        setError("");
-        setLoading(true);
-
+    const fetchAnalysis = async () => {
         try {
-            const dataToSend = {
-                ...formData,
-                graduationYear: Number(formData.graduationYear)
-            };
+            const response = await api.get(
+                "/users/resume/analyze"
+            );
 
-            const response = await registerUser(dataToSend);
+            console.log("Resume analysis:", response.data);
 
-            setMessage(response.data);
-
-            setTimeout(() => {
-                navigate("/login");
-            }, 1500);
+            setAnalysis(response.data);
 
         } catch (err) {
-            console.error(err);
+            console.log(err);
+        }
+    };
 
-            if (err.response?.data) {
-                setError(
-                    typeof err.response.data === "string"
-                        ? err.response.data
-                        : "Registration failed."
-                );
-            } else {
-                setError("Unable to connect to the server.");
-            }
-        } finally {
-            setLoading(false);
+    const uploadResume = async (selectedFile) => {
+
+        if (!selectedFile) {
+            alert("Please select a resume.");
+            return;
+        }
+
+        const formData = new FormData();
+
+        formData.append("file", selectedFile);
+
+        try {
+
+            await api.post(
+                "/users/resume",
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data"
+                    }
+                }
+            );
+
+            setFile(selectedFile);
+
+            await fetchProfile();
+            await fetchAnalysis();
+
+            alert("Resume uploaded successfully!");
+
+        } catch (err) {
+
+            console.log("Resume upload error:", err);
+
+            alert("Upload failed.");
+
         }
     };
 
     return (
-        <div className="register-page">
 
-            <div className="register-card">
+        <div className="resume-page">
 
-                {/* Header */}
-                <div className="register-header">
-                    <div className="brand">
-                        <div className="brand-icon">✦</div>
-                        <span>OfferForge</span>
-                    </div>
+            {/* ================= HEADER ================= */}
 
-                    <h1>Create your account</h1>
+            <div className="resume-header">
+
+                <div>
+
+                    <h1>
+                        Resume Manager <span>📄</span>
+                    </h1>
 
                     <p>
-                        Start building your career with OfferForge
+                        Upload, analyze and optimize your resume for better ATS scores.
                     </p>
-                </div>
 
-                {/* Messages */}
-                {message && (
-                    <div className="success-message">
-                        ✓ {message}
-                    </div>
-                )}
-
-                {error && (
-                    <div className="error-message">
-                        ⚠ {error}
-                    </div>
-                )}
-
-                {/* Form */}
-                <form className="register-form" onSubmit={handleSubmit}>
-
-                    {/* Personal Information */}
-                    <div className="section-title">
-                        <span>01</span>
-                        Personal Information
-                    </div>
-
-                    <div className="form-grid">
-
-                        <div className="form-group full-width">
-                            <label>Full Name</label>
-                            <input
-                                type="text"
-                                name="fullName"
-                                placeholder="Enter your full name"
-                                value={formData.fullName}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label>Email Address</label>
-                            <input
-                                type="email"
-                                name="email"
-                                placeholder="you@example.com"
-                                value={formData.email}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label>Phone Number</label>
-                            <input
-                                type="tel"
-                                name="phone"
-                                placeholder="Enter phone number"
-                                value={formData.phone}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group full-width">
-                            <label>Password</label>
-                            <input
-                                type="password"
-                                name="password"
-                                placeholder="Create a strong password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-
-                    </div>
-
-                    {/* Academic Information */}
-                    <div className="section-title">
-                        <span>02</span>
-                        Academic Information
-                    </div>
-
-                    <div className="form-grid">
-
-                        <div className="form-group full-width">
-                            <label>College</label>
-                            <input
-                                type="text"
-                                name="college"
-                                placeholder="Enter your college name"
-                                value={formData.college}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label>Branch</label>
-                            <input
-                                type="text"
-                                name="branch"
-                                placeholder="e.g. IT, CSE, AIML"
-                                value={formData.branch}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label>Graduation Year</label>
-                            <input
-                                type="number"
-                                name="graduationYear"
-                                placeholder="e.g. 2028"
-                                value={formData.graduationYear}
-                                onChange={handleChange}
-                                min="2024"
-                                max="2040"
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group full-width">
-                            <label>Location</label>
-                            <input
-                                type="text"
-                                name="location"
-                                placeholder="City, State"
-                                value={formData.location}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-
-                    </div>
-
-                    {/* Career Information */}
-                    <div className="section-title">
-                        <span>03</span>
-                        Career Profile
-                    </div>
-
-                    <div className="form-grid">
-
-                        <div className="form-group full-width">
-                            <label>Skills</label>
-                            <input
-                                type="text"
-                                name="skills"
-                                placeholder="Java, Python, SQL, React..."
-                                value={formData.skills}
-                                onChange={handleChange}
-                                required
-                            />
-                            <small>
-                                Separate multiple skills with commas
-                            </small>
-                        </div>
-
-                        <div className="form-group full-width">
-                            <label>LinkedIn URL <span>Optional</span></label>
-                            <input
-                                type="url"
-                                name="linkedinUrl"
-                                placeholder="https://linkedin.com/in/your-profile"
-                                value={formData.linkedinUrl}
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                        <div className="form-group full-width">
-                            <label>GitHub URL <span>Optional</span></label>
-                            <input
-                                type="url"
-                                name="githubUrl"
-                                placeholder="https://github.com/your-username"
-                                value={formData.githubUrl}
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                        <div className="form-group full-width">
-                            <label>Resume URL <span>Optional</span></label>
-                            <input
-                                type="url"
-                                name="resumeUrl"
-                                placeholder="https://your-resume-link.com"
-                                value={formData.resumeUrl}
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                    </div>
-
-                    {/* Submit */}
-                    <button
-                        type="submit"
-                        className="register-button"
-                        disabled={loading}
-                    >
-                        {loading ? (
-                            <>
-                                <span className="spinner"></span>
-                                Creating account...
-                            </>
-                        ) : (
-                            <>
-                                Create Account
-                                <span>→</span>
-                            </>
-                        )}
-                    </button>
-
-                </form>
-
-                {/* Login */}
-                <div className="login-link">
-                    Already have an account?
-                    <button
-                        type="button"
-                        onClick={() => navigate("/login")}
-                    >
-                        Login
-                    </button>
                 </div>
 
             </div>
 
+
+            {/* ================= RESUME + ATS ================= */}
+
+            <div className="resume-top-grid">
+
+                <div className="resume-panel">
+
+                    <ResumeOverview
+                        profile={profile}
+                        file={file}
+                        setFile={setFile}
+                        uploadResume={uploadResume}
+                    />
+
+                </div>
+
+
+                <div className="resume-panel">
+
+                    <ATSGauge
+                        score={analysis?.matchScore || 0}
+                    />
+
+                </div>
+
+            </div>
+
+
+            {/* ================= RESUME HEALTH ================= */}
+
+            <div className="resume-section">
+
+                <ResumeHealth />
+
+            </div>
+
+
+            {/* ================= AI RESUME COACH ================= */}
+
+            <div className="resume-section">
+
+                <AIResumeSuggestions
+                    suggestions={analysis?.suggestion}
+                />
+
+            </div>
+
         </div>
+
     );
 }
