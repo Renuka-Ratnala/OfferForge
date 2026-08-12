@@ -21,11 +21,17 @@ export default function ChatWindow({ onClose }) {
 
             setReply(response.data.response);
 
-        } catch (err) {
+        }  catch (err) {
 
-            console.log(err);
-            setReply("Something went wrong.");
-        }
+               console.error("AI chat error:", err);
+
+               setReply(
+                   err.response?.data?.message ||
+                   err.response?.data ||
+                   "Unable to connect to the AI Career Coach."
+               );
+
+           }
 
         setLoading(false);
     };

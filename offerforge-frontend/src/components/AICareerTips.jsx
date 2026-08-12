@@ -13,29 +13,35 @@ export default function AICareerTips() {
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
 
-    const getTips = async () => {
+     const getTips = async () => {
 
-        try {
+         try {
 
-            setLoading(true);
+             setLoading(true);
 
-            const response = await api.get("/ai/tips");
+             const response = await api.get("/ai/tips");
 
-            setTips(response.data);
+             console.log("AI tips response:", response.data);
 
-            setShowModal(true);
+             setTips(response.data);
+             setShowModal(true);
 
-        } catch (err) {
+         } catch (err) {
 
-            console.log(err);
+             console.error("AI tips error:", err);
 
-        } finally {
+             alert(
+                 err.response?.data ||
+                 "Unable to load AI tips. Please try again."
+             );
 
-            setLoading(false);
+         } finally {
 
-        }
+             setLoading(false);
 
-    };
+         }
+
+     };
 
     return (
 
