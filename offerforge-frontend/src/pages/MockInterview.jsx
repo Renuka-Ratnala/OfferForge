@@ -97,7 +97,17 @@ export default function MockInterview() {
             const stream =
                 await navigator.mediaDevices.getUserMedia({
                     audio: true
-                });
+                });console.log("Microphone stream:", stream);
+
+                   stream.getAudioTracks().forEach((track) => {
+                       console.log("Microphone track:", {
+                           label: track.label,
+                           enabled: track.enabled,
+                           muted: track.muted,
+                           readyState: track.readyState
+                       });
+                   });
+
 
 
             streamRef.current = stream;
@@ -110,8 +120,17 @@ export default function MockInterview() {
 
             // Create recorder
 
-            const mediaRecorder =
-                new MediaRecorder(stream);
+             let mimeType = "audio/webm";
+
+             if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
+                 mimeType = "audio/webm;codecs=opus";
+             }
+
+             const mediaRecorder = new MediaRecorder(stream, {
+                 mimeType
+             });
+
+             mediaRecorderRef.current = mediaRecorder;
 
             mediaRecorderRef.current = mediaRecorder;
 
@@ -135,13 +154,12 @@ export default function MockInterview() {
 
             mediaRecorder.onstop = () => {
 
-                const audioBlob =
-                    new Blob(
-                        audioChunksRef.current,
-                        {
-                            type: "audio/webm"
-                        }
-                    );
+                 const audioBlob = new Blob(
+                     audioChunksRef.current,
+                     {
+                         type: mediaRecorderRef.current?.mimeType || "audio/webm"
+                     }
+                 );
 
 
                 const url =
