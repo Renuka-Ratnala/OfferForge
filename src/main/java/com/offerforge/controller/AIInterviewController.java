@@ -1,5 +1,7 @@
 package com.offerforge.controller;
 
+import com.offerforge.dto.InterviewEvaluationRequest;
+import com.offerforge.dto.InterviewEvaluationResponse;
 import com.offerforge.dto.InterviewQuestionResponse;
 import com.offerforge.dto.InterviewStartRequest;
 import com.offerforge.service.AIInterviewService;
@@ -19,6 +21,20 @@ public class AIInterviewController {
     ) {
 
         return aiInterviewService.generateQuestion(
+                request.getRole(),
+                request.getType(),
+                request.getDifficulty()
+        );
+    }
+
+    @PostMapping("/evaluate")
+    public InterviewEvaluationResponse evaluateAnswer(
+            @RequestBody InterviewEvaluationRequest request
+    ) {
+
+        return aiInterviewService.evaluateAnswer(
+                request.getQuestion(),
+                request.getAnswer(),
                 request.getRole(),
                 request.getType(),
                 request.getDifficulty()
