@@ -808,3 +808,19 @@ export default function MockInterview() {
                                 <audio
                                     controls
                                     src={audioURL}
+                                />
+
+                            </div>
+
+                        )}
+
+                    </div>
+
+                </div>
+
+            )}
+
+        </div>
+
+    );
+}
