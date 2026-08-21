@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./MockInterview.css";
 
 const API_URL =
     "https://offerforge-backend-rxyb.onrender.com";
 
 export default function MockInterview() {
+
+    // ==============================
+    // INTERVIEW SETUP
+    // ==============================
 
     const [started, setStarted] = useState(false);
 
@@ -14,12 +18,48 @@ export default function MockInterview() {
 
     const [question, setQuestion] = useState("");
     const [category, setCategory] = useState("");
+
     const [loading, setLoading] = useState(false);
+
+
+    // ==============================
+    // RECORDING
+    // ==============================
+
+    const [isRecording, setIsRecording] =
+        useState(false);
+
+    const [audioURL, setAudioURL] =
+        useState("");
+
+    const [transcript, setTranscript] =
+        useState("");
+
+    const [interimTranscript, setInterimTranscript] =
+        useState("");
+
+    const mediaRecorderRef =
+        useRef(null);
+
+    const audioChunksRef =
+        useRef([]);
+
+    const recognitionRef =
+        useRef(null);
+
+
+    // ==============================
+    // GENERATE INTERVIEW QUESTION
+    // ==============================
 
     const startInterview = async () => {
 
         if (!role || !type || !difficulty) {
-            alert("Please select all interview options.");
+
+            alert(
+                "Please select all interview options."
+            );
+
             return;
         }
 
@@ -27,13 +67,20 @@ export default function MockInterview() {
 
         try {
 
+            console.log(
+                "Generating interview question..."
+            );
+
             const response = await fetch(
                 `${API_URL}/api/ai/interview/question`,
                 {
                     method: "POST",
+
                     headers: {
-                        "Content-Type": "application/json"
+                        "Content-Type":
+                            "application/json"
                     },
+
                     body: JSON.stringify({
                         role: role,
                         type: type,
@@ -42,42 +89,383 @@ export default function MockInterview() {
                 }
             );
 
+            console.log(
+                "Question API status:",
+                response.status
+            );
+
             if (!response.ok) {
+
+                const errorText =
+                    await response.text();
+
+                console.error(
+                    "Server error:",
+                    errorText
+                );
+
                 throw new Error(
                     `Server error: ${response.status}`
                 );
             }
 
-            const data = await response.json();
+            const data =
+                await response.json();
 
-            console.log("Generated question:", data);
+            console.log(
+                "Generated question:",
+                data
+            );
 
-            setQuestion(data.question);
-            setCategory(data.category);
+            setQuestion(
+                data.question
+            );
+
+            setCategory(
+                data.category || type
+            );
 
             setStarted(true);
 
-        }catch (error) {
+        } catch (error) {
 
-             console.error("INTERVIEW API ERROR:", error);
+            console.error(
+                "Interview question error:",
+                error
+            );
 
-             if (error instanceof TypeError) {
-                 console.error(
-                     "This is likely a CORS/network error."
-                 );
-             }
+            alert(
+                "Unable to generate interview question.\n" +
+                error.message
+            );
 
-             alert(
-                 `Unable to generate question.\n${error.message}`
-             );
+        } finally {
 
-         } finally {
+            setLoading(false);
 
-             setLoading(false);
-
-         }
-
+        }
     };
+
+
+    // ==============================
+    // START RECORDING
+    // ==============================
+
+    const startRecording = async () => {
+
+        try {
+
+            console.log(
+                "Requesting microphone..."
+            );
+
+            // Clear previous answer
+
+            setTranscript("");
+            setInterimTranscript("");
+            setAudioURL("");
+
+            // ==============================
+            // MICROPHONE
+            // ==============================
+
+            const stream =
+                await navigator.mediaDevices.getUserMedia(
+                    {
+                        audio: true
+                    }
+                );
+
+            console.log(
+                "Microphone access granted"
+            );
+
+
+            // ==============================
+            // AUDIO RECORDER
+            // ==============================
+
+            const mediaRecorder =
+                new MediaRecorder(stream);
+
+            mediaRecorderRef.current =
+                mediaRecorder;
+
+            audioChunksRef.current = [];
+
+
+            mediaRecorder.ondataavailable =
+                (event) => {
+
+                    if (
+                        event.data &&
+                        event.data.size > 0
+                    ) {
+
+                        audioChunksRef.current.push(
+                            event.data
+                        );
+
+                    }
+                };
+
+
+            mediaRecorder.onstop = () => {
+
+                console.log(
+                    "Creating recorded audio..."
+                );
+
+                const audioBlob =
+                    new Blob(
+                        audioChunksRef.current,
+                        {
+                            type: "audio/webm"
+                        }
+                    );
+
+                const url =
+                    URL.createObjectURL(
+                        audioBlob
+                    );
+
+                setAudioURL(url);
+
+
+                // Stop microphone
+
+                stream
+                    .getTracks()
+                    .forEach(
+                        (track) =>
+                            track.stop()
+                    );
+
+            };
+
+
+            // ==============================
+            // SPEECH RECOGNITION
+            // ==============================
+
+            const SpeechRecognition =
+                window.SpeechRecognition ||
+                window.webkitSpeechRecognition;
+
+
+            if (!SpeechRecognition) {
+
+                alert(
+                    "Speech recognition is not supported. Please use Google Chrome."
+                );
+
+                stream
+                    .getTracks()
+                    .forEach(
+                        (track) =>
+                            track.stop()
+                    );
+
+                return;
+            }
+
+
+            const recognition =
+                new SpeechRecognition();
+
+            recognitionRef.current =
+                recognition;
+
+            recognition.continuous =
+                true;
+
+            recognition.interimResults =
+                true;
+
+            recognition.lang =
+                "en-US";
+
+
+            recognition.onstart = () => {
+
+                console.log(
+                    "Speech recognition started"
+                );
+
+            };
+
+
+            recognition.onresult =
+                (event) => {
+
+                    let finalText = "";
+                    let interimText = "";
+
+                    for (
+                        let i = event.resultIndex;
+                        i < event.results.length;
+                        i++
+                    ) {
+
+                        const text =
+                            event.results[i][0]
+                                .transcript;
+
+                        if (
+                            event.results[i]
+                                .isFinal
+                        ) {
+
+                            finalText +=
+                                text + " ";
+
+                        } else {
+
+                            interimText +=
+                                text;
+
+                        }
+                    }
+
+
+                    if (finalText) {
+
+                        setTranscript(
+                            (previous) =>
+                                previous +
+                                finalText
+                        );
+
+                    }
+
+
+                    setInterimTranscript(
+                        interimText
+                    );
+                };
+
+
+            recognition.onerror =
+                (event) => {
+
+                    console.error(
+                        "Speech recognition error:",
+                        event.error
+                    );
+
+                };
+
+
+            recognition.onend = () => {
+
+                console.log(
+                    "Speech recognition ended"
+                );
+
+            };
+
+
+            // Start both
+
+            mediaRecorder.start();
+
+            recognition.start();
+
+            setIsRecording(true);
+
+            console.log(
+                "Recording started"
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Microphone error:",
+                error
+            );
+
+            alert(
+                "Unable to access microphone. Please allow microphone permission in Chrome."
+            );
+
+        }
+    };
+
+
+    // ==============================
+    // STOP RECORDING
+    // ==============================
+
+    const stopRecording = () => {
+
+        console.log(
+            "Stopping recording..."
+        );
+
+
+        if (
+            mediaRecorderRef.current &&
+            mediaRecorderRef.current.state !==
+                "inactive"
+        ) {
+
+            mediaRecorderRef.current.stop();
+
+        }
+
+
+        if (recognitionRef.current) {
+
+            recognitionRef.current.stop();
+
+        }
+
+
+        setIsRecording(false);
+
+        setInterimTranscript("");
+
+        console.log(
+            "Recording stopped"
+        );
+    };
+
+
+    // ==============================
+    // CLEANUP
+    // ==============================
+
+    useEffect(() => {
+
+        return () => {
+
+            if (
+                recognitionRef.current
+            ) {
+
+                recognitionRef.current.stop();
+
+            }
+
+
+            if (
+                mediaRecorderRef.current &&
+                mediaRecorderRef.current.state !==
+                    "inactive"
+            ) {
+
+                mediaRecorderRef.current.stop();
+
+            }
+
+        };
+
+    }, []);
+
+
+    // ==============================
+    // UI
+    // ==============================
 
     return (
 
@@ -98,22 +486,31 @@ export default function MockInterview() {
                         </h1>
 
                         <p>
-                            Practice real interview questions and receive
-                            AI-powered feedback on your answers.
+                            Practice real interview
+                            questions and receive
+                            AI-powered feedback
+                            on your answers.
                         </p>
 
                     </div>
 
+
                     <div className="setup-card">
+
+                        {/* ROLE */}
 
                         <div className="form-group">
 
-                            <label>Target Role</label>
+                            <label>
+                                Target Role
+                            </label>
 
                             <select
                                 value={role}
                                 onChange={(e) =>
-                                    setRole(e.target.value)
+                                    setRole(
+                                        e.target.value
+                                    )
                                 }
                             >
 
@@ -145,14 +542,21 @@ export default function MockInterview() {
 
                         </div>
 
+
+                        {/* TYPE */}
+
                         <div className="form-group">
 
-                            <label>Interview Type</label>
+                            <label>
+                                Interview Type
+                            </label>
 
                             <select
                                 value={type}
                                 onChange={(e) =>
-                                    setType(e.target.value)
+                                    setType(
+                                        e.target.value
+                                    )
                                 }
                             >
 
@@ -176,14 +580,21 @@ export default function MockInterview() {
 
                         </div>
 
+
+                        {/* DIFFICULTY */}
+
                         <div className="form-group">
 
-                            <label>Difficulty</label>
+                            <label>
+                                Difficulty
+                            </label>
 
                             <select
                                 value={difficulty}
                                 onChange={(e) =>
-                                    setDifficulty(e.target.value)
+                                    setDifficulty(
+                                        e.target.value
+                                    )
                                 }
                             >
 
@@ -207,9 +618,14 @@ export default function MockInterview() {
 
                         </div>
 
+
+                        {/* START */}
+
                         <button
                             className="start-interview-button"
-                            onClick={startInterview}
+                            onClick={
+                                startInterview
+                            }
                             disabled={loading}
                         >
 
@@ -218,7 +634,9 @@ export default function MockInterview() {
                                 : "Start Mock Interview"
                             }
 
-                            {!loading && <span>→</span>}
+                            {!loading && (
+                                <span>→</span>
+                            )}
 
                         </button>
 
@@ -229,6 +647,8 @@ export default function MockInterview() {
             ) : (
 
                 <div className="interview-screen">
+
+                    {/* TOP BAR */}
 
                     <div className="interview-topbar">
 
@@ -250,10 +670,18 @@ export default function MockInterview() {
 
                     </div>
 
+
+                    {/* QUESTION */}
+
                     <div className="question-card">
 
                         <span className="question-label">
-                            {category || type} QUESTION
+
+                            {category ||
+                                type ||
+                                "INTERVIEW"}{" "}
+                            QUESTION
+
                         </span>
 
                         <h2>
@@ -261,10 +689,15 @@ export default function MockInterview() {
                         </h2>
 
                         <p>
-                            Think carefully and explain your answer clearly.
+                            Think carefully and
+                            explain your answer
+                            clearly.
                         </p>
 
                     </div>
+
+
+                    {/* ANSWER */}
 
                     <div className="answer-card">
 
@@ -277,29 +710,101 @@ export default function MockInterview() {
                             <div>
 
                                 <h3>
-                                    Ready to answer?
+
+                                    {isRecording
+                                        ? "Listening..."
+                                        : "Ready to answer?"
+                                    }
+
                                 </h3>
 
                                 <p>
-                                    Speak your answer clearly.
-                                    Your communication will be analyzed.
+
+                                    {isRecording
+                                        ? "Speak clearly. Your answer is being recorded."
+                                        : "Speak your answer clearly. Your communication will be analyzed."
+                                    }
+
                                 </p>
 
                             </div>
 
                         </div>
 
-                        <button className="record-button">
-                            🎙 Start Recording
-                        </button>
 
-                    </div>
+                        {/* RECORD BUTTON */}
 
-                </div>
+                        {!isRecording ? (
 
-            )}
+                            <button
+                                className="record-button"
+                                onClick={
+                                    startRecording
+                                }
+                            >
 
-        </div>
+                                🎙 Start Recording
 
-    );
-}
+                            </button>
+
+                        ) : (
+
+                            <button
+                                className="record-button"
+                                onClick={
+                                    stopRecording
+                                }
+                            >
+
+                                ⏹ Stop Recording
+
+                            </button>
+
+                        )}
+
+
+                        {/* TRANSCRIPT */}
+
+                        {(transcript ||
+                            interimTranscript) && (
+
+                            <div className="transcript-box">
+
+                                <h3>
+                                    Your spoken answer
+                                </h3>
+
+                                <p>
+
+                                    {transcript}
+
+                                    <span
+                                        style={{
+                                            opacity: 0.5
+                                        }}
+                                    >
+                                        {
+                                            interimTranscript
+                                        }
+                                    </span>
+
+                                </p>
+
+                            </div>
+
+                        )}
+
+
+                        {/* AUDIO */}
+
+                        {audioURL && (
+
+                            <div className="audio-section">
+
+                                <h3>
+                                    Your recorded answer
+                                </h3>
+
+                                <audio
+                                    controls
+                                    src={audioURL}
