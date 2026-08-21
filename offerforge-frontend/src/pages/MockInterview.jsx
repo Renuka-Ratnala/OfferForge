@@ -6,9 +6,9 @@ const API_URL =
 
 export default function MockInterview() {
 
-    // ==============================
+    // =========================================================
     // INTERVIEW SETUP
-    // ==============================
+    // =========================================================
 
     const [started, setStarted] = useState(false);
 
@@ -16,15 +16,32 @@ export default function MockInterview() {
     const [type, setType] = useState("");
     const [difficulty, setDifficulty] = useState("");
 
+    // =========================================================
+    // QUESTION
+    // =========================================================
+
     const [question, setQuestion] = useState("");
     const [category, setCategory] = useState("");
 
-    const [loading, setLoading] = useState(false);
+    const [questionNumber, setQuestionNumber] =
+        useState(1);
 
+    const [loading, setLoading] =
+        useState(false);
 
-    // ==============================
+    // =========================================================
+    // EVALUATION
+    // =========================================================
+
+    const [evaluation, setEvaluation] =
+        useState(null);
+
+    const [submitting, setSubmitting] =
+        useState(false);
+
+    // =========================================================
     // RECORDING
-    // ==============================
+    // =========================================================
 
     const [isRecording, setIsRecording] =
         useState(false);
@@ -38,6 +55,10 @@ export default function MockInterview() {
     const [interimTranscript, setInterimTranscript] =
         useState("");
 
+    // =========================================================
+    // REFS
+    // =========================================================
+
     const mediaRecorderRef =
         useRef(null);
 
@@ -48,9 +69,9 @@ export default function MockInterview() {
         useRef(null);
 
 
-    // ==============================
-    // GENERATE INTERVIEW QUESTION
-    // ==============================
+    // =========================================================
+    // GENERATE FIRST INTERVIEW QUESTION
+    // =========================================================
 
     const startInterview = async () => {
 
@@ -100,7 +121,7 @@ export default function MockInterview() {
                     await response.text();
 
                 console.error(
-                    "Server error:",
+                    "Question API error:",
                     errorText
                 );
 
@@ -125,6 +146,16 @@ export default function MockInterview() {
                 data.category || type
             );
 
+            setQuestionNumber(1);
+
+            setEvaluation(null);
+
+            setTranscript("");
+
+            setInterimTranscript("");
+
+            setAudioURL("");
+
             setStarted(true);
 
         } catch (error) {
@@ -147,9 +178,9 @@ export default function MockInterview() {
     };
 
 
-    // ==============================
+    // =========================================================
     // START RECORDING
-    // ==============================
+    // =========================================================
 
     const startRecording = async () => {
 
@@ -159,15 +190,22 @@ export default function MockInterview() {
                 "Requesting microphone..."
             );
 
-            // Clear previous answer
+            // ---------------------------------------------
+            // CLEAR PREVIOUS ANSWER
+            // ---------------------------------------------
 
             setTranscript("");
+
             setInterimTranscript("");
+
             setAudioURL("");
 
-            // ==============================
+            setEvaluation(null);
+
+
+            // ---------------------------------------------
             // MICROPHONE
-            // ==============================
+            // ---------------------------------------------
 
             const stream =
                 await navigator.mediaDevices.getUserMedia(
@@ -181,9 +219,9 @@ export default function MockInterview() {
             );
 
 
-            // ==============================
-            // AUDIO RECORDER
-            // ==============================
+            // ---------------------------------------------
+            // MEDIA RECORDER
+            // ---------------------------------------------
 
             const mediaRecorder =
                 new MediaRecorder(stream);
@@ -193,6 +231,10 @@ export default function MockInterview() {
 
             audioChunksRef.current = [];
 
+
+            // ---------------------------------------------
+            // AUDIO DATA
+            // ---------------------------------------------
 
             mediaRecorder.ondataavailable =
                 (event) => {
@@ -207,8 +249,13 @@ export default function MockInterview() {
                         );
 
                     }
+
                 };
 
+
+            // ---------------------------------------------
+            // RECORDING STOPPED
+            // ---------------------------------------------
 
             mediaRecorder.onstop = () => {
 
@@ -231,22 +278,27 @@ export default function MockInterview() {
 
                 setAudioURL(url);
 
+                console.log(
+                    "Audio created successfully"
+                );
 
-                // Stop microphone
+
+                // Stop microphone tracks
 
                 stream
                     .getTracks()
                     .forEach(
-                        (track) =>
-                            track.stop()
+                        (track) => {
+                            track.stop();
+                        }
                     );
 
             };
 
 
-            // ==============================
+            // =================================================
             // SPEECH RECOGNITION
-            // ==============================
+            // =================================================
 
             const SpeechRecognition =
                 window.SpeechRecognition ||
@@ -262,8 +314,9 @@ export default function MockInterview() {
                 stream
                     .getTracks()
                     .forEach(
-                        (track) =>
-                            track.stop()
+                        (track) => {
+                            track.stop();
+                        }
                     );
 
                 return;
@@ -276,6 +329,7 @@ export default function MockInterview() {
             recognitionRef.current =
                 recognition;
 
+
             recognition.continuous =
                 true;
 
@@ -286,6 +340,10 @@ export default function MockInterview() {
                 "en-US";
 
 
+            // ---------------------------------------------
+            // RECOGNITION START
+            // ---------------------------------------------
+
             recognition.onstart = () => {
 
                 console.log(
@@ -295,11 +353,17 @@ export default function MockInterview() {
             };
 
 
+            // ---------------------------------------------
+            // SPEECH RESULT
+            // ---------------------------------------------
+
             recognition.onresult =
                 (event) => {
 
                     let finalText = "";
+
                     let interimText = "";
+
 
                     for (
                         let i = event.resultIndex;
@@ -310,6 +374,7 @@ export default function MockInterview() {
                         const text =
                             event.results[i][0]
                                 .transcript;
+
 
                         if (
                             event.results[i]
@@ -325,8 +390,11 @@ export default function MockInterview() {
                                 text;
 
                         }
+
                     }
 
+
+                    // Add final transcript
 
                     if (finalText) {
 
@@ -339,11 +407,18 @@ export default function MockInterview() {
                     }
 
 
+                    // Show live speech
+
                     setInterimTranscript(
                         interimText
                     );
+
                 };
 
+
+            // ---------------------------------------------
+            // RECOGNITION ERROR
+            // ---------------------------------------------
 
             recognition.onerror =
                 (event) => {
@@ -356,6 +431,10 @@ export default function MockInterview() {
                 };
 
 
+            // ---------------------------------------------
+            // RECOGNITION END
+            // ---------------------------------------------
+
             recognition.onend = () => {
 
                 console.log(
@@ -365,7 +444,9 @@ export default function MockInterview() {
             };
 
 
-            // Start both
+            // =================================================
+            // START BOTH
+            // =================================================
 
             mediaRecorder.start();
 
@@ -389,12 +470,13 @@ export default function MockInterview() {
             );
 
         }
+
     };
 
 
-    // ==============================
+    // =========================================================
     // STOP RECORDING
-    // ==============================
+    // =========================================================
 
     const stopRecording = () => {
 
@@ -402,6 +484,10 @@ export default function MockInterview() {
             "Stopping recording..."
         );
 
+
+        // ---------------------------------------------
+        // STOP MEDIA RECORDER
+        // ---------------------------------------------
 
         if (
             mediaRecorderRef.current &&
@@ -414,9 +500,23 @@ export default function MockInterview() {
         }
 
 
+        // ---------------------------------------------
+        // STOP SPEECH RECOGNITION
+        // ---------------------------------------------
+
         if (recognitionRef.current) {
 
-            recognitionRef.current.stop();
+            try {
+
+                recognitionRef.current.stop();
+
+            } catch (error) {
+
+                console.log(
+                    "Recognition already stopped."
+                );
+
+            }
 
         }
 
@@ -428,25 +528,278 @@ export default function MockInterview() {
         console.log(
             "Recording stopped"
         );
+
     };
 
 
-    // ==============================
+    // =========================================================
+    // SUBMIT ANSWER FOR AI EVALUATION
+    // =========================================================
+
+    const submitAnswer = async () => {
+
+        if (!transcript.trim()) {
+
+            alert(
+                "Please record your answer before submitting."
+            );
+
+            return;
+        }
+
+        setSubmitting(true);
+
+        try {
+
+            console.log(
+                "Submitting answer for evaluation..."
+            );
+
+
+            const response = await fetch(
+                `${API_URL}/api/ai/interview/evaluate`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        role: role,
+
+                        type: type,
+
+                        difficulty: difficulty,
+
+                        question: question,
+
+                        answer: transcript.trim()
+
+                    })
+                }
+            );
+
+
+            console.log(
+                "Evaluation API status:",
+                response.status
+            );
+
+
+            if (!response.ok) {
+
+                const errorText =
+                    await response.text();
+
+                console.error(
+                    "Evaluation API error:",
+                    errorText
+                );
+
+                throw new Error(
+                    `Server error: ${response.status}`
+                );
+
+            }
+
+
+            const data =
+                await response.json();
+
+
+            console.log(
+                "AI Evaluation:",
+                data
+            );
+
+
+            setEvaluation(data);
+
+
+        } catch (error) {
+
+            console.error(
+                "Evaluation failed:",
+                error
+            );
+
+            alert(
+                "Unable to evaluate your answer.\n" +
+                error.message
+            );
+
+        } finally {
+
+            setSubmitting(false);
+
+        }
+
+    };
+
+
+    // =========================================================
+    // GENERATE NEXT QUESTION
+    // =========================================================
+
+    const nextQuestion = async () => {
+
+        // ---------------------------------------------
+        // FINISH AFTER QUESTION 5
+        // ---------------------------------------------
+
+        if (questionNumber >= 5) {
+
+            alert(
+                "Interview completed!"
+            );
+
+            return;
+
+        }
+
+
+        setLoading(true);
+
+        setEvaluation(null);
+
+        setTranscript("");
+
+        setInterimTranscript("");
+
+        setAudioURL("");
+
+
+        try {
+
+            console.log(
+                "Generating next question..."
+            );
+
+
+            const response = await fetch(
+                `${API_URL}/api/ai/interview/question`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        role: role,
+
+                        type: type,
+
+                        difficulty: difficulty
+
+                    })
+                }
+            );
+
+
+            console.log(
+                "Next question API status:",
+                response.status
+            );
+
+
+            if (!response.ok) {
+
+                const errorText =
+                    await response.text();
+
+                console.error(
+                    "Next question error:",
+                    errorText
+                );
+
+                throw new Error(
+                    `Server error: ${response.status}`
+                );
+
+            }
+
+
+            const data =
+                await response.json();
+
+
+            console.log(
+                "Next question:",
+                data
+            );
+
+
+            setQuestion(
+                data.question
+            );
+
+
+            setCategory(
+                data.category || type
+            );
+
+
+            setQuestionNumber(
+                (previous) =>
+                    previous + 1
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "Next question failed:",
+                error
+            );
+
+            alert(
+                "Unable to generate the next question.\n" +
+                error.message
+            );
+
+        } finally {
+
+            setLoading(false);
+
+        }
+
+    };
+
+
+    // =========================================================
     // CLEANUP
-    // ==============================
+    // =========================================================
 
     useEffect(() => {
 
         return () => {
 
-            if (
-                recognitionRef.current
-            ) {
+            // Stop speech recognition
 
-                recognitionRef.current.stop();
+            if (recognitionRef.current) {
+
+                try {
+
+                    recognitionRef.current.stop();
+
+                } catch (error) {
+
+                    console.log(
+                        "Speech recognition already stopped."
+                    );
+
+                }
 
             }
 
+
+            // Stop media recorder
 
             if (
                 mediaRecorderRef.current &&
@@ -463,17 +816,25 @@ export default function MockInterview() {
     }, []);
 
 
-    // ==============================
+    // =========================================================
     // UI
-    // ==============================
+    // =========================================================
 
     return (
 
         <div className="mock-interview-page">
 
+
+            {/* =================================================
+                SETUP SCREEN
+            ================================================= */}
+
             {!started ? (
 
                 <div className="interview-setup">
+
+
+                    {/* HEADER */}
 
                     <div className="interview-header">
 
@@ -495,7 +856,10 @@ export default function MockInterview() {
                     </div>
 
 
+                    {/* SETUP CARD */}
+
                     <div className="setup-card">
+
 
                         {/* ROLE */}
 
@@ -543,7 +907,7 @@ export default function MockInterview() {
                         </div>
 
 
-                        {/* TYPE */}
+                        {/* INTERVIEW TYPE */}
 
                         <div className="form-group">
 
@@ -619,7 +983,7 @@ export default function MockInterview() {
                         </div>
 
 
-                        {/* START */}
+                        {/* START INTERVIEW */}
 
                         <button
                             className="start-interview-button"
@@ -635,7 +999,9 @@ export default function MockInterview() {
                             }
 
                             {!loading && (
-                                <span>→</span>
+                                <span>
+                                    →
+                                </span>
                             )}
 
                         </button>
@@ -644,9 +1010,16 @@ export default function MockInterview() {
 
                 </div>
 
+
             ) : (
 
+
+                /* =================================================
+                   INTERVIEW SCREEN
+                ================================================= */
+
                 <div className="interview-screen">
+
 
                     {/* TOP BAR */}
 
@@ -664,29 +1037,40 @@ export default function MockInterview() {
 
                         </div>
 
+
                         <div className="question-progress">
-                            Question 1 / 5
+
+                            Question{" "}
+                            {questionNumber} / 5
+
                         </div>
 
                     </div>
 
 
-                    {/* QUESTION */}
+                    {/* =================================================
+                        QUESTION CARD
+                    ================================================= */}
 
                     <div className="question-card">
 
                         <span className="question-label">
 
-                            {category ||
+                            {(
+                                category ||
                                 type ||
-                                "INTERVIEW"}{" "}
+                                "INTERVIEW"
+                            ).toUpperCase()}{" "}
+
                             QUESTION
 
                         </span>
 
+
                         <h2>
                             {question}
                         </h2>
+
 
                         <p>
                             Think carefully and
@@ -697,31 +1081,44 @@ export default function MockInterview() {
                     </div>
 
 
-                    {/* ANSWER */}
+                    {/* =================================================
+                        ANSWER CARD
+                    ================================================= */}
 
                     <div className="answer-card">
 
+
+                        {/* RECORDING STATUS */}
+
                         <div className="recording-status">
 
+
                             <div className="microphone-circle">
-                                🎤
+
+                                {isRecording
+                                    ? "🔴"
+                                    : "🎤"
+                                }
+
                             </div>
+
 
                             <div>
 
                                 <h3>
 
                                     {isRecording
-                                        ? "Listening..."
+                                        ? "Recording..."
                                         : "Ready to answer?"
                                     }
 
                                 </h3>
 
+
                                 <p>
 
                                     {isRecording
-                                        ? "Speak clearly. Your answer is being recorded."
+                                        ? "Speak clearly. Click Stop Recording when you finish."
                                         : "Speak your answer clearly. Your communication will be analyzed."
                                     }
 
@@ -732,7 +1129,9 @@ export default function MockInterview() {
                         </div>
 
 
-                        {/* RECORD BUTTON */}
+                        {/* =================================================
+                            RECORD / STOP BUTTON
+                        ================================================= */}
 
                         {!isRecording ? (
 
@@ -750,7 +1149,7 @@ export default function MockInterview() {
                         ) : (
 
                             <button
-                                className="record-button"
+                                className="record-button stop-recording-button"
                                 onClick={
                                     stopRecording
                                 }
@@ -763,30 +1162,32 @@ export default function MockInterview() {
                         )}
 
 
-                        {/* TRANSCRIPT */}
+                        {/* =================================================
+                            LIVE TRANSCRIPT
+                        ================================================= */}
 
-                        {(transcript ||
-                            interimTranscript) && (
+                        {isRecording && (
 
-                            <div className="transcript-box">
+                            <div className="live-transcript">
 
                                 <h3>
-                                    Your spoken answer
+                                    Your answer
                                 </h3>
 
                                 <p>
 
                                     {transcript}
 
-                                    <span
-                                        style={{
-                                            opacity: 0.5
-                                        }}
-                                    >
-                                        {
-                                            interimTranscript
-                                        }
-                                    </span>
+                                    {interimTranscript && (
+
+                                        <span className="interim-text">
+
+                                            {" "}
+                                            {interimTranscript}
+
+                                        </span>
+
+                                    )}
 
                                 </p>
 
@@ -795,20 +1196,271 @@ export default function MockInterview() {
                         )}
 
 
-                        {/* AUDIO */}
+                        {/* =================================================
+                            RECORDED ANSWER
+                        ================================================= */}
 
                         {audioURL && (
 
-                            <div className="audio-section">
+                            <div className="recorded-answer">
 
                                 <h3>
                                     Your recorded answer
                                 </h3>
 
+
                                 <audio
                                     controls
                                     src={audioURL}
+                                    className="recorded-audio"
                                 />
+
+
+                                {/* SUBMIT */}
+
+                                {!evaluation && (
+
+                                    <button
+                                        className="submit-answer-button"
+                                        onClick={
+                                            submitAnswer
+                                        }
+                                        disabled={
+                                            submitting
+                                        }
+                                    >
+
+                                        {submitting
+                                            ? "Analyzing Answer..."
+                                            : "Submit Answer →"
+                                        }
+
+                                    </button>
+
+                                )}
+
+                            </div>
+
+                        )}
+
+
+                        {/* =================================================
+                            AI EVALUATION
+                        ================================================= */}
+
+                        {evaluation && (
+
+                            <div className="evaluation-card">
+
+
+                                {/* HEADER */}
+
+                                <div className="evaluation-header">
+
+                                    <div>
+
+                                        <span className="interview-label">
+                                            AI EVALUATION
+                                        </span>
+
+                                        <h2>
+                                            Your Answer Feedback
+                                        </h2>
+
+                                    </div>
+
+
+                                    <div className="overall-score">
+
+                                        {evaluation.score ??
+                                            0}/100
+
+                                    </div>
+
+                                </div>
+
+
+                                {/* SCORES */}
+
+                                <div className="score-grid">
+
+
+                                    <div className="score-item">
+
+                                        <span>
+                                            Confidence
+                                        </span>
+
+                                        <strong>
+                                            {evaluation.confidence ??
+                                                0}/100
+                                        </strong>
+
+                                    </div>
+
+
+                                    <div className="score-item">
+
+                                        <span>
+                                            Communication
+                                        </span>
+
+                                        <strong>
+                                            {evaluation.communication ??
+                                                0}/100
+                                        </strong>
+
+                                    </div>
+
+
+                                    <div className="score-item">
+
+                                        <span>
+                                            Technical Accuracy
+                                        </span>
+
+                                        <strong>
+                                            {evaluation.technicalAccuracy ??
+                                                0}/100
+                                        </strong>
+
+                                    </div>
+
+                                </div>
+
+
+                                {/* FEEDBACK */}
+
+                                <div className="feedback-section">
+
+                                    <h3>
+                                        AI Feedback
+                                    </h3>
+
+                                    <p>
+                                        {evaluation.feedback ||
+                                            "No feedback available."}
+                                    </p>
+
+                                </div>
+
+
+                                {/* STRENGTHS */}
+
+                                <div className="feedback-section">
+
+                                    <h3>
+                                        Strengths
+                                    </h3>
+
+
+                                    {evaluation.strengths &&
+                                    evaluation.strengths.length >
+                                        0 ? (
+
+                                        <ul>
+
+                                            {evaluation.strengths.map(
+                                                (
+                                                    strength,
+                                                    index
+                                                ) => (
+
+                                                    <li
+                                                        key={
+                                                            index
+                                                        }
+                                                    >
+                                                        {strength}
+                                                    </li>
+
+                                                )
+                                            )}
+
+                                        </ul>
+
+                                    ) : (
+
+                                        <p>
+                                            No strengths provided.
+                                        </p>
+
+                                    )}
+
+                                </div>
+
+
+                                {/* IMPROVEMENTS */}
+
+                                <div className="feedback-section">
+
+                                    <h3>
+                                        Areas to Improve
+                                    </h3>
+
+
+                                    {evaluation.improvements &&
+                                    evaluation.improvements.length >
+                                        0 ? (
+
+                                        <ul>
+
+                                            {evaluation.improvements.map(
+                                                (
+                                                    item,
+                                                    index
+                                                ) => (
+
+                                                    <li
+                                                        key={
+                                                            index
+                                                        }
+                                                    >
+                                                        {item}
+                                                    </li>
+
+                                                )
+                                            )}
+
+                                        </ul>
+
+                                    ) : (
+
+                                        <p>
+                                            No improvement suggestions provided.
+                                        </p>
+
+                                    )}
+
+                                </div>
+
+
+                                {/* NEXT QUESTION */}
+
+                                <button
+                                    className="next-question-button"
+                                    onClick={
+                                        nextQuestion
+                                    }
+                                    disabled={
+                                        loading
+                                    }
+                                >
+
+                                    {loading
+
+                                        ? "Generating Question..."
+
+                                        : questionNumber >=
+                                          5
+
+                                        ? "Finish Interview"
+
+                                        : "Next Question →"
+
+                                    }
+
+                                </button>
 
                             </div>
 
@@ -823,4 +1475,5 @@ export default function MockInterview() {
         </div>
 
     );
+
 }

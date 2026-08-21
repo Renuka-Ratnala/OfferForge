@@ -311,4 +311,133 @@
         max-width: 650px;
     }
 
+    .submit-answer-button,
+    .next-question-button {
+        width: 100%;
+        margin-top: 20px;
+        padding: 15px 20px;
+        border: none;
+        border-radius: 12px;
+        color: white;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .submit-answer-button {
+        background: #7c4dff;
+    }
+
+    .next-question-button {
+        background: #2196f3;
+    }
+
+    .submit-answer-button:disabled,
+    .next-question-button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+
+    .evaluation-card {
+        margin-top: 30px;
+        padding: 28px;
+        border-radius: 18px;
+        background: rgba(20, 30, 55, 0.95);
+        border: 1px solid rgba(140, 100, 255, 0.3);
+    }
+
+
+    .evaluation-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+    }
+
+
+    .evaluation-header h2 {
+        margin-top: 8px;
+        color: white;
+    }
+
+
+    .overall-score {
+        font-size: 30px;
+        font-weight: 700;
+        color: #9b7cff;
+    }
+
+
+    .score-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+
+
+    .score-item {
+        padding: 18px;
+        border-radius: 12px;
+        background: rgba(40, 50, 80, 0.8);
+        text-align: center;
+    }
+
+
+    .score-item span {
+        display: block;
+        color: #b8bfd5;
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+
+
+    .score-item strong {
+        color: white;
+        font-size: 22px;
+    }
+
+
+    .feedback-section {
+        margin-top: 25px;
+    }
+
+
+    .feedback-section h3 {
+        color: white;
+        margin-bottom: 10px;
+    }
+
+
+    .feedback-section p,
+    .feedback-section li {
+        color: #d4d8e8;
+        line-height: 1.6;
+    }
+
+
+    .feedback-section ul {
+        padding-left: 20px;
+    }
+
+
+    .feedback-section li {
+        margin-bottom: 8px;
+    }
+
+
+    @media (max-width: 700px) {
+
+        .score-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .evaluation-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+    }
+
 }
