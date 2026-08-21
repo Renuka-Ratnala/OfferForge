@@ -1,28 +1,284 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./MockInterview.css";
 
 export default function MockInterview() {
 
     const [started, setStarted] = useState(false);
+
     const [role, setRole] = useState("");
     const [type, setType] = useState("");
     const [difficulty, setDifficulty] = useState("");
 
+    const [isRecording, setIsRecording] = useState(false);
+    const [recordingTime, setRecordingTime] = useState(0);
+    const [audioUrl, setAudioUrl] = useState(null);
+    const [error, setError] = useState("");
+
+    const mediaRecorderRef = useRef(null);
+    const audioChunksRef = useRef([]);
+    const streamRef = useRef(null);
+    const timerRef = useRef(null);
+
+    // ==========================================
+    // CLEANUP
+    // ==========================================
+
+    useEffect(() => {
+
+        return () => {
+
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+            }
+
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach(track => {
+                    track.stop();
+                });
+            }
+
+        };
+
+    }, []);
+
+
+    // ==========================================
+    // START INTERVIEW
+    // ==========================================
+
     const startInterview = () => {
 
         if (!role || !type || !difficulty) {
+
             alert("Please select all interview options.");
+
             return;
         }
 
         setStarted(true);
     };
 
-    return (
 
-        <div className="mock-interview-page">
+    // ==========================================
+    // START RECORDING
+    // ==========================================
 
-            {!started ? (
+    const startRecording = async () => {
+
+        setError("");
+
+        try {
+
+            // Check browser support
+
+            if (!navigator.mediaDevices ||
+                !navigator.mediaDevices.getUserMedia) {
+
+                setError(
+                    "Microphone recording is not supported in this browser."
+                );
+
+                return;
+            }
+
+
+            if (!window.MediaRecorder) {
+
+                setError(
+                    "MediaRecorder is not supported in this browser."
+                );
+
+                return;
+            }
+
+
+            // Ask for microphone permission
+
+            const stream =
+                await navigator.mediaDevices.getUserMedia({
+                    audio: true
+                });
+
+
+            streamRef.current = stream;
+
+
+            // Reset previous audio
+
+            audioChunksRef.current = [];
+
+
+            // Create recorder
+
+            const mediaRecorder =
+                new MediaRecorder(stream);
+
+            mediaRecorderRef.current = mediaRecorder;
+
+
+            // When audio data is available
+
+            mediaRecorder.ondataavailable = (event) => {
+
+                if (event.data.size > 0) {
+
+                    audioChunksRef.current.push(
+                        event.data
+                    );
+
+                }
+
+            };
+
+
+            // When recording stops
+
+            mediaRecorder.onstop = () => {
+
+                const audioBlob =
+                    new Blob(
+                        audioChunksRef.current,
+                        {
+                            type: "audio/webm"
+                        }
+                    );
+
+
+                const url =
+                    URL.createObjectURL(audioBlob);
+
+
+                setAudioUrl(url);
+
+
+                // Stop microphone
+
+                if (streamRef.current) {
+
+                    streamRef.current
+                        .getTracks()
+                        .forEach(track => track.stop());
+
+                }
+
+            };
+
+
+            // Start recording
+
+            mediaRecorder.start();
+
+            setIsRecording(true);
+
+            setRecordingTime(0);
+
+
+            // Start timer
+
+            timerRef.current =
+                setInterval(() => {
+
+                    setRecordingTime(
+                        previous => previous + 1
+                    );
+
+                }, 1000);
+
+        }
+
+        catch (err) {
+
+            console.error(
+                "Microphone error:",
+                err
+            );
+
+
+            if (err.name === "NotAllowedError") {
+
+                setError(
+                    "Microphone permission was denied. Please allow microphone access and try again."
+                );
+
+            }
+            else if (err.name === "NotFoundError") {
+
+                setError(
+                    "No microphone was found on this device."
+                );
+
+            }
+            else {
+
+                setError(
+                    "Unable to access your microphone."
+                );
+
+            }
+
+        }
+
+    };
+
+
+    // ==========================================
+    // STOP RECORDING
+    // ==========================================
+
+    const stopRecording = () => {
+
+        if (
+            mediaRecorderRef.current &&
+            mediaRecorderRef.current.state !== "inactive"
+        ) {
+
+            mediaRecorderRef.current.stop();
+
+        }
+
+
+        setIsRecording(false);
+
+
+        if (timerRef.current) {
+
+            clearInterval(timerRef.current);
+
+            timerRef.current = null;
+
+        }
+
+    };
+
+
+    // ==========================================
+    // FORMAT TIME
+    // ==========================================
+
+    const formatTime = (seconds) => {
+
+        const minutes =
+            Math.floor(seconds / 60);
+
+        const remainingSeconds =
+            seconds % 60;
+
+        return `${minutes}:${remainingSeconds
+            .toString()
+            .padStart(2, "0")}`;
+
+    };
+
+
+    // ==========================================
+    // SETUP SCREEN
+    // ==========================================
+
+    if (!started) {
+
+        return (
+
+            <div className="mock-interview-page">
 
                 <div className="interview-setup">
 
@@ -54,8 +310,11 @@ export default function MockInterview() {
 
                             <select
                                 value={role}
-                                onChange={(e) => setRole(e.target.value)}
+                                onChange={(e) =>
+                                    setRole(e.target.value)
+                                }
                             >
+
                                 <option value="">
                                     Select a role
                                 </option>
@@ -93,8 +352,11 @@ export default function MockInterview() {
 
                             <select
                                 value={type}
-                                onChange={(e) => setType(e.target.value)}
+                                onChange={(e) =>
+                                    setType(e.target.value)
+                                }
                             >
+
                                 <option value="">
                                     Select interview type
                                 </option>
@@ -128,6 +390,7 @@ export default function MockInterview() {
                                     setDifficulty(e.target.value)
                                 }
                             >
+
                                 <option value="">
                                     Select difficulty
                                 </option>
@@ -153,93 +416,240 @@ export default function MockInterview() {
                             className="start-interview-button"
                             onClick={startInterview}
                         >
+
                             Start Mock Interview
-                            <span>→</span>
+
+                            <span>
+                                →
+                            </span>
+
                         </button>
 
                     </div>
 
                 </div>
 
-            ) : (
+            </div>
 
-                <div className="interview-screen">
+        );
 
-                    <div className="interview-topbar">
+    }
+
+
+    // ==========================================
+    // INTERVIEW SCREEN
+    // ==========================================
+
+    return (
+
+        <div className="mock-interview-page">
+
+            <div className="interview-screen">
+
+                {/* TOP BAR */}
+
+                <div className="interview-topbar">
+
+                    <div>
+
+                        <span className="interview-label">
+                            AI MOCK INTERVIEW
+                        </span>
+
+                        <h1>
+                            {role}
+                        </h1>
+
+                    </div>
+
+
+                    <div className="question-progress">
+
+                        Question 1 / 5
+
+                    </div>
+
+                </div>
+
+
+                {/* QUESTION */}
+
+                <div className="question-card">
+
+                    <span className="question-label">
+                        {type.toUpperCase()} QUESTION
+                    </span>
+
+                    <h2>
+                        Tell me about a challenging technical
+                        problem you solved in one of your projects.
+                    </h2>
+
+                    <p>
+                        Explain the problem, your approach,
+                        the technologies you used, and the result.
+                    </p>
+
+                </div>
+
+
+                {/* ANSWER */}
+
+                <div className="answer-card">
+
+                    <div className="recording-status">
+
+                        <div
+                            className={`microphone-circle ${
+                                isRecording
+                                    ? "recording"
+                                    : ""
+                            }`}
+                        >
+
+                            {isRecording
+                                ? "🔴"
+                                : "🎤"}
+
+                        </div>
+
 
                         <div>
 
-                            <span className="interview-label">
-                                AI MOCK INTERVIEW
-                            </span>
+                            <h3>
 
-                            <h1>
-                                {role}
-                            </h1>
+                                {isRecording
+                                    ? "Recording..."
+                                    : "Ready to answer?"}
 
-                        </div>
+                            </h3>
 
-                        <div className="question-progress">
-                            Question 1 / 5
+
+                            <p>
+
+                                {isRecording
+                                    ? "Speak clearly. Your answer is being recorded."
+                                    : "Speak your answer clearly. Your communication will be analyzed."}
+
+                            </p>
+
                         </div>
 
                     </div>
 
 
-                    <div className="question-card">
+                    {/* TIMER */}
 
-                        <span className="question-label">
-                            TECHNICAL QUESTION
-                        </span>
+                    {isRecording && (
 
-                        <h2>
-                            Tell me about a challenging technical
-                            problem you solved in one of your projects.
-                        </h2>
+                        <div
+                            style={{
+                                textAlign: "center",
+                                color: "#A78BFA",
+                                fontSize: "24px",
+                                fontWeight: "600",
+                                margin: "20px 0"
+                            }}
+                        >
 
-                        <p>
-                            Explain the problem, your approach,
-                            the technologies you used, and the result.
-                        </p>
-
-                    </div>
-
-
-                    <div className="answer-card">
-
-                        <div className="recording-status">
-
-                            <div className="microphone-circle">
-                                🎤
-                            </div>
-
-                            <div>
-
-                                <h3>
-                                    Ready to answer?
-                                </h3>
-
-                                <p>
-                                    Speak your answer clearly.
-                                    Your communication will be analyzed.
-                                </p>
-
-                            </div>
+                            {formatTime(recordingTime)}
 
                         </div>
 
+                    )}
 
-                        <button className="record-button">
+
+                    {/* ERROR */}
+
+                    {error && (
+
+                        <div
+                            style={{
+                                background: "rgba(239,68,68,0.12)",
+                                border: "1px solid rgba(239,68,68,0.4)",
+                                color: "#F87171",
+                                padding: "12px 16px",
+                                borderRadius: "10px",
+                                marginTop: "15px",
+                                marginBottom: "15px"
+                            }}
+                        >
+
+                            ⚠️ {error}
+
+                        </div>
+
+                    )}
+
+
+                    {/* RECORD BUTTON */}
+
+                    {!isRecording ? (
+
+                        <button
+                            className="record-button"
+                            onClick={startRecording}
+                        >
+
                             🎙 Start Recording
+
                         </button>
 
-                    </div>
+                    ) : (
+
+                        <button
+                            className="record-button"
+                            onClick={stopRecording}
+                            style={{
+                                background: "#DC2626"
+                            }}
+                        >
+
+                            ⏹ Stop Recording
+
+                        </button>
+
+                    )}
+
+
+                    {/* AUDIO PREVIEW */}
+
+                    {audioUrl && !isRecording && (
+
+                        <div
+                            style={{
+                                marginTop: "25px"
+                            }}
+                        >
+
+                            <p
+                                style={{
+                                    color: "#94A3B8",
+                                    marginBottom: "10px"
+                                }}
+                            >
+                                Your recorded answer:
+                            </p>
+
+
+                            <audio
+                                controls
+                                src={audioUrl}
+                                style={{
+                                    width: "100%"
+                                }}
+                            />
+
+                        </div>
+
+                    )}
 
                 </div>
 
-            )}
+            </div>
 
         </div>
 
     );
+
 }
