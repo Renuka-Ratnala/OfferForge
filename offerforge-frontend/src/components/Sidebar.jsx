@@ -70,11 +70,25 @@ export default function Sidebar() {
                     <FaRobot />
                     <span>AI Coach</span>
                 </NavLink>
-                <NavLink to="/mock-interview" style={linkStyle}>
+                <NavLink
+                    to="/mock-interview"
+                    style={({ isActive }) => ({
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                        padding: "12px 16px",
+                        borderRadius: "10px",
+                        textDecoration: "none",
+                        color: isActive ? "white" : "#CBD5E1",
+                        background: isActive
+                            ? "linear-gradient(90deg, #7C3AED, #8B5CF6)"
+                            : "transparent",
+                        marginBottom: "8px"
+                    })}
+                >
                     <FaMicrophone />
                     Mock Interview
                 </NavLink>
-
 
                 <NavLink
                     to="/profile"
