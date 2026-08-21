@@ -3,7 +3,8 @@ import {
     FaFileAlt,
     FaBriefcase,
     FaRobot,
-    FaUser
+    FaUser,
+    FaMicrophone
 } from "react-icons/fa";
 
 import { NavLink } from "react-router-dom";
@@ -68,6 +69,10 @@ export default function Sidebar() {
                 >
                     <FaRobot />
                     <span>AI Coach</span>
+                </NavLink>
+                <NavLink to="/mock-interview" style={linkStyle}>
+                    <FaMicrophone />
+                    Mock Interview
                 </NavLink>
 
 

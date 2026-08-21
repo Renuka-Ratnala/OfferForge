@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-
+import MockInterview from "./pages/MockInterview";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 
@@ -34,6 +34,7 @@ export default function App() {
                 <Route path="/profile" element={<Profile />} />
 
                 <Route path="/ai" element={<AI />} />
+                <Route path="/mock-interview" element={<MockInterview />} />
 
             </Route>
 

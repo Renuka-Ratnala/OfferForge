@@ -1,0 +1,277 @@
+.mock-interview-page {
+    min-height: 100vh;
+    color: #f8fafc;
+    font-family: Inter, Arial, sans-serif;
+}
+
+
+/* ================= SETUP ================= */
+
+.interview-setup {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+.interview-header {
+    text-align: center;
+    margin-bottom: 35px;
+}
+
+.interview-icon {
+    width: 65px;
+    height: 65px;
+    margin: 0 auto 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 18px;
+
+    background: rgba(139, 92, 246, 0.15);
+
+    font-size: 30px;
+}
+
+.interview-header h1 {
+    margin: 0;
+    font-size: 36px;
+}
+
+.interview-header p {
+    margin-top: 10px;
+    color: #94a3b8;
+    font-size: 16px;
+}
+
+
+/* ================= SETUP CARD ================= */
+
+.setup-card {
+    background: #111827;
+    border: 1px solid #1e293b;
+    border-radius: 18px;
+    padding: 30px;
+}
+
+.form-group {
+    margin-bottom: 22px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #cbd5e1;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.form-group select {
+    width: 100%;
+    padding: 13px 14px;
+
+    border-radius: 10px;
+    border: 1px solid #273044;
+
+    background: #0b1120;
+    color: #f8fafc;
+
+    outline: none;
+    font-size: 14px;
+}
+
+.form-group select:focus {
+    border-color: #8b5cf6;
+}
+
+.start-interview-button {
+    width: 100%;
+    margin-top: 10px;
+
+    padding: 14px 20px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #7c3aed;
+    color: white;
+
+    font-size: 15px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.start-interview-button:hover {
+    background: #8b5cf6;
+}
+
+
+/* ================= INTERVIEW ================= */
+
+.interview-screen {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 35px 20px;
+}
+
+.interview-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 30px;
+}
+
+.interview-label {
+    color: #8b5cf6;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.interview-topbar h1 {
+    margin: 6px 0 0;
+    font-size: 28px;
+}
+
+.question-progress {
+    padding: 9px 14px;
+    border-radius: 20px;
+
+    background: #111827;
+    border: 1px solid #1e293b;
+
+    color: #cbd5e1;
+    font-size: 13px;
+}
+
+
+/* ================= QUESTION ================= */
+
+.question-card {
+    background: #111827;
+    border: 1px solid #1e293b;
+    border-radius: 18px;
+
+    padding: 30px;
+    margin-bottom: 20px;
+}
+
+.question-label {
+    color: #3b82f6;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.question-card h2 {
+    margin: 15px 0;
+
+    font-size: 24px;
+    line-height: 1.4;
+}
+
+.question-card p {
+    margin: 0;
+
+    color: #94a3b8;
+    line-height: 1.6;
+}
+
+
+/* ================= ANSWER ================= */
+
+.answer-card {
+    background: #111827;
+    border: 1px solid #1e293b;
+    border-radius: 18px;
+
+    padding: 30px;
+}
+
+.recording-status {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+
+    margin-bottom: 25px;
+}
+
+.microphone-circle {
+    width: 55px;
+    height: 55px;
+
+    border-radius: 50%;
+
+    background: rgba(59, 130, 246, 0.15);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 24px;
+}
+
+.recording-status h3 {
+    margin: 0 0 5px;
+}
+
+.recording-status p {
+    margin: 0;
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+.record-button {
+    width: 100%;
+
+    padding: 14px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #2563eb;
+    color: white;
+
+    font-weight: 600;
+    font-size: 15px;
+
+    cursor: pointer;
+}
+
+.record-button:hover {
+    background: #3b82f6;
+}
+
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 700px) {
+
+    .interview-setup,
+    .interview-screen {
+        padding: 25px 15px;
+    }
+
+    .interview-header h1 {
+        font-size: 30px;
+    }
+
+    .interview-topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .question-card h2 {
+        font-size: 20px;
+    }
+
+}
