@@ -33,15 +33,12 @@ export default function MockInterview() {
     // EVALUATION
     // =========================================================
 
-    // Current question evaluation
     const [evaluation, setEvaluation] =
         useState(null);
 
-    // All question evaluations
     const [evaluations, setEvaluations] =
         useState([]);
 
-    // Final results screen
     const [showResults, setShowResults] =
         useState(false);
 
@@ -76,6 +73,12 @@ export default function MockInterview() {
 
     const recognitionRef =
         useRef(null);
+
+    // IMPORTANT:
+    // Keeps transcript immediately available even before
+    // React finishes updating state.
+    const transcriptRef =
+        useRef("");
 
 
     // =========================================================
@@ -112,10 +115,15 @@ export default function MockInterview() {
                     },
 
                     body: JSON.stringify({
+
                         role: role,
+
                         type: type,
+
                         difficulty: difficulty,
+
                         questionNumber: 1
+
                     })
                 }
             );
@@ -158,7 +166,6 @@ export default function MockInterview() {
 
             setQuestionNumber(1);
 
-            // Reset previous interview
             setEvaluation(null);
 
             setEvaluations([]);
@@ -170,6 +177,8 @@ export default function MockInterview() {
             setInterimTranscript("");
 
             setAudioURL("");
+
+            transcriptRef.current = "";
 
             setStarted(true);
 
@@ -205,7 +214,9 @@ export default function MockInterview() {
                 "Requesting microphone..."
             );
 
-            // Clear previous answer
+            // ---------------------------------------------
+            // CLEAR PREVIOUS ANSWER
+            // ---------------------------------------------
 
             setTranscript("");
 
@@ -215,10 +226,12 @@ export default function MockInterview() {
 
             setEvaluation(null);
 
+            transcriptRef.current = "";
 
-            // =================================================
+
+            // ---------------------------------------------
             // MICROPHONE
-            // =================================================
+            // ---------------------------------------------
 
             const stream =
                 await navigator.mediaDevices.getUserMedia(
@@ -232,9 +245,9 @@ export default function MockInterview() {
             );
 
 
-            // =================================================
+            // ---------------------------------------------
             // MEDIA RECORDER
-            // =================================================
+            // ---------------------------------------------
 
             const mediaRecorder =
                 new MediaRecorder(stream);
@@ -245,9 +258,9 @@ export default function MockInterview() {
             audioChunksRef.current = [];
 
 
-            // =================================================
+            // ---------------------------------------------
             // AUDIO DATA
-            // =================================================
+            // ---------------------------------------------
 
             mediaRecorder.ondataavailable =
                 (event) => {
@@ -266,9 +279,9 @@ export default function MockInterview() {
                 };
 
 
-            // =================================================
+            // ---------------------------------------------
             // RECORDING STOPPED
-            // =================================================
+            // ---------------------------------------------
 
             mediaRecorder.onstop = () => {
 
@@ -407,20 +420,31 @@ export default function MockInterview() {
                     }
 
 
-                    // Add final transcript
+                    // -----------------------------------------
+                    // SAVE FINAL TRANSCRIPT TO REF + STATE
+                    // -----------------------------------------
 
-                    if (finalText) {
+                    if (finalText.trim()) {
+
+                        transcriptRef.current =
+                            `${transcriptRef.current} ${finalText}`
+                                .trim();
 
                         setTranscript(
-                            (previous) =>
-                                previous +
-                                finalText
+                            transcriptRef.current
+                        );
+
+                        console.log(
+                            "Final transcript:",
+                            transcriptRef.current
                         );
 
                     }
 
 
-                    // Show live transcript
+                    // -----------------------------------------
+                    // LIVE INTERIM TEXT
+                    // -----------------------------------------
 
                     setInterimTranscript(
                         interimText
@@ -441,6 +465,9 @@ export default function MockInterview() {
                         event.error
                     );
 
+                    // Do not stop audio recording
+                    // if speech recognition temporarily fails.
+
                 };
 
 
@@ -458,7 +485,7 @@ export default function MockInterview() {
 
 
             // =================================================
-            // START RECORDING + RECOGNITION
+            // START BOTH
             // =================================================
 
             mediaRecorder.start();
@@ -498,7 +525,9 @@ export default function MockInterview() {
         );
 
 
-        // Stop MediaRecorder
+        // ---------------------------------------------
+        // STOP MEDIA RECORDER
+        // ---------------------------------------------
 
         if (
             mediaRecorderRef.current &&
@@ -511,7 +540,9 @@ export default function MockInterview() {
         }
 
 
-        // Stop speech recognition
+        // ---------------------------------------------
+        // STOP SPEECH RECOGNITION
+        // ---------------------------------------------
 
         if (recognitionRef.current) {
 
@@ -530,9 +561,42 @@ export default function MockInterview() {
         }
 
 
-        setIsRecording(false);
+        // ---------------------------------------------
+        // USE FINAL + INTERIM TEXT
+        // ---------------------------------------------
+
+        const currentTranscript =
+            transcriptRef.current.trim();
+
+        const currentInterim =
+            interimTranscript.trim();
+
+
+        const finalAnswer =
+            currentTranscript ||
+            currentInterim;
+
+
+        if (finalAnswer) {
+
+            transcriptRef.current =
+                finalAnswer;
+
+            setTranscript(
+                finalAnswer
+            );
+
+        }
+
 
         setInterimTranscript("");
+
+        setIsRecording(false);
+
+        console.log(
+            "Final answer:",
+            finalAnswer
+        );
 
         console.log(
             "Recording stopped"
@@ -547,14 +611,24 @@ export default function MockInterview() {
 
     const submitAnswer = async () => {
 
-        if (!transcript.trim()) {
+        // Use ref first because React state updates
+        // are asynchronous.
+
+        const finalAnswer =
+            transcriptRef.current.trim() ||
+            transcript.trim() ||
+            interimTranscript.trim();
+
+
+        if (!finalAnswer) {
 
             alert(
-                "Please record your answer before submitting."
+                "No speech was detected. Please record your answer again."
             );
 
             return;
         }
+
 
         setSubmitting(true);
 
@@ -562,6 +636,11 @@ export default function MockInterview() {
 
             console.log(
                 "Submitting answer for evaluation..."
+            );
+
+            console.log(
+                "Answer being submitted:",
+                finalAnswer
             );
 
 
@@ -585,7 +664,7 @@ export default function MockInterview() {
 
                         question: question,
 
-                        answer: transcript.trim()
+                        answer: finalAnswer
 
                     })
                 }
@@ -625,12 +704,16 @@ export default function MockInterview() {
             );
 
 
-            // Store current evaluation
+            // ---------------------------------------------
+            // STORE CURRENT EVALUATION
+            // ---------------------------------------------
 
             setEvaluation(data);
 
 
-            // Store evaluation for final results
+            // ---------------------------------------------
+            // STORE FOR FINAL RESULTS
+            // ---------------------------------------------
 
             setEvaluations(
                 previous => [
@@ -667,9 +750,9 @@ export default function MockInterview() {
 
     const nextQuestion = async () => {
 
-        // =====================================================
+        // ---------------------------------------------
         // FINISH AFTER QUESTION 5
-        // =====================================================
+        // ---------------------------------------------
 
         if (questionNumber >= 5) {
 
@@ -690,12 +773,18 @@ export default function MockInterview() {
 
         setAudioURL("");
 
+        transcriptRef.current = "";
+
 
         try {
 
             console.log(
                 "Generating next question..."
             );
+
+
+            const nextNumber =
+                questionNumber + 1;
 
 
             const response = await fetch(
@@ -717,7 +806,7 @@ export default function MockInterview() {
                         difficulty: difficulty,
 
                         questionNumber:
-                            questionNumber + 1
+                            nextNumber
 
                     })
                 }
@@ -768,8 +857,7 @@ export default function MockInterview() {
 
 
             setQuestionNumber(
-                previous =>
-                    previous + 1
+                nextNumber
             );
 
 
@@ -833,9 +921,20 @@ export default function MockInterview() {
 
             }
 
+
+            // Release audio URL
+
+            if (audioURL) {
+
+                URL.revokeObjectURL(
+                    audioURL
+                );
+
+            }
+
         };
 
-    }, []);
+    }, [audioURL]);
 
 
     // =========================================================
@@ -922,9 +1021,6 @@ export default function MockInterview() {
 
                 <div className="interview-results">
 
-
-                    {/* RESULTS HEADER */}
-
                     <div className="results-header">
 
                         <div className="interview-icon">
@@ -941,7 +1037,7 @@ export default function MockInterview() {
 
                         <p>
                             Here's how you performed
-                            across all{" "}
+                            across{" "}
                             {evaluations.length}
                             {" "}questions.
                         </p>
@@ -981,7 +1077,6 @@ export default function MockInterview() {
                     {/* SCORE GRID */}
 
                     <div className="result-score-grid">
-
 
                         <div className="result-score-card">
 
@@ -1070,6 +1165,8 @@ export default function MockInterview() {
 
                             setAudioURL("");
 
+                            transcriptRef.current = "";
+
                         }}
                     >
 
@@ -1088,9 +1185,6 @@ export default function MockInterview() {
                 ================================================= */
 
                 <div className="interview-setup">
-
-
-                    {/* HEADER */}
 
                     <div className="interview-header">
 
@@ -1111,8 +1205,6 @@ export default function MockInterview() {
 
                     </div>
 
-
-                    {/* SETUP CARD */}
 
                     <div className="setup-card">
 
@@ -1163,7 +1255,7 @@ export default function MockInterview() {
                         </div>
 
 
-                        {/* INTERVIEW TYPE */}
+                        {/* TYPE */}
 
                         <div className="form-group">
 
@@ -1239,7 +1331,7 @@ export default function MockInterview() {
                         </div>
 
 
-                        {/* START BUTTON */}
+                        {/* START */}
 
                         <button
                             className="start-interview-button"
@@ -1306,7 +1398,7 @@ export default function MockInterview() {
                     </div>
 
 
-                    {/* QUESTION CARD */}
+                    {/* QUESTION */}
 
                     <div className="question-card">
 
@@ -1317,6 +1409,7 @@ export default function MockInterview() {
                                 type ||
                                 "INTERVIEW"
                             ).toUpperCase()}
+
                             {" "}QUESTION
 
                         </span>
@@ -1381,7 +1474,7 @@ export default function MockInterview() {
                         </div>
 
 
-                        {/* RECORD / STOP BUTTON */}
+                        {/* RECORD / STOP */}
 
                         {!isRecording ? (
 
@@ -1412,14 +1505,16 @@ export default function MockInterview() {
                         )}
 
 
-                        {/* LIVE TRANSCRIPT */}
+                        {/* =================================================
+                            LIVE TRANSCRIPT
+                        ================================================= */}
 
                         {isRecording && (
 
                             <div className="live-transcript">
 
                                 <h3>
-                                    Your answer
+                                    Listening...
                                 </h3>
 
                                 <p>
@@ -1444,7 +1539,9 @@ export default function MockInterview() {
                         )}
 
 
-                        {/* RECORDED ANSWER */}
+                        {/* =================================================
+                            RECORDED ANSWER
+                        ================================================= */}
 
                         {audioURL && (
 
@@ -1462,7 +1559,40 @@ export default function MockInterview() {
                                 />
 
 
-                                {/* SUBMIT ANSWER */}
+                                {/* =================================================
+                                    TRANSCRIBED ANSWER
+                                ================================================= */}
+
+                                <div className="transcribed-answer">
+
+                                    <h3>
+                                        Transcribed Answer
+                                    </h3>
+
+                                    {transcript ? (
+
+                                        <p>
+                                            {transcript}
+                                        </p>
+
+                                    ) : (
+
+                                        <p className="no-transcript">
+
+                                            No speech was detected.
+                                            Please record your answer
+                                            again.
+
+                                        </p>
+
+                                    )}
+
+                                </div>
+
+
+                                {/* =================================================
+                                    SUBMIT ANSWER
+                                ================================================= */}
 
                                 {!evaluation && (
 
@@ -1472,13 +1602,17 @@ export default function MockInterview() {
                                             submitAnswer
                                         }
                                         disabled={
-                                            submitting
+                                            submitting ||
+                                            !transcript.trim()
                                         }
                                     >
 
                                         {submitting
+
                                             ? "Analyzing Answer..."
+
                                             : "Submit Answer →"
+
                                         }
 
                                     </button>
@@ -1490,14 +1624,16 @@ export default function MockInterview() {
                         )}
 
 
-                        {/* AI EVALUATION */}
+                        {/* =================================================
+                            AI EVALUATION
+                        ================================================= */}
 
                         {evaluation && (
 
                             <div className="evaluation-card">
 
 
-                                {/* EVALUATION HEADER */}
+                                {/* HEADER */}
 
                                 <div className="evaluation-header">
 
@@ -1524,7 +1660,7 @@ export default function MockInterview() {
                                 </div>
 
 
-                                {/* SCORE GRID */}
+                                {/* SCORES */}
 
                                 <div className="score-grid">
 
@@ -1644,7 +1780,7 @@ export default function MockInterview() {
                                 </div>
 
 
-                                {/* AREAS TO IMPROVE */}
+                                {/* IMPROVEMENTS */}
 
                                 <div className="feedback-section">
 
