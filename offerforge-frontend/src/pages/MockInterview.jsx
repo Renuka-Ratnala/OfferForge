@@ -23,43 +23,63 @@ export default function MockInterview() {
     const [question, setQuestion] = useState("");
     const [category, setCategory] = useState("");
 
-    const [questionNumber, setQuestionNumber] = useState(1);
+    const [questionNumber, setQuestionNumber] =
+        useState(1);
 
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] =
+        useState(false);
 
     // =========================================================
     // EVALUATION
     // =========================================================
 
-    const [evaluation, setEvaluation] = useState(null);
+    // Current question evaluation
+    const [evaluation, setEvaluation] =
+        useState(null);
 
-    const [submitting, setSubmitting] = useState(false);
+    // All question evaluations
+    const [evaluations, setEvaluations] =
+        useState([]);
+
+    // Final results screen
+    const [showResults, setShowResults] =
+        useState(false);
+
+    const [submitting, setSubmitting] =
+        useState(false);
 
     // =========================================================
     // RECORDING
     // =========================================================
 
-    const [isRecording, setIsRecording] = useState(false);
+    const [isRecording, setIsRecording] =
+        useState(false);
 
-    const [audioURL, setAudioURL] = useState("");
+    const [audioURL, setAudioURL] =
+        useState("");
 
-    const [transcript, setTranscript] = useState("");
+    const [transcript, setTranscript] =
+        useState("");
 
-    const [interimTranscript, setInterimTranscript] = useState("");
+    const [interimTranscript, setInterimTranscript] =
+        useState("");
 
     // =========================================================
     // REFS
     // =========================================================
 
-    const mediaRecorderRef = useRef(null);
+    const mediaRecorderRef =
+        useRef(null);
 
-    const audioChunksRef = useRef([]);
+    const audioChunksRef =
+        useRef([]);
 
-    const recognitionRef = useRef(null);
+    const recognitionRef =
+        useRef(null);
 
 
     // =========================================================
-    // GENERATE FIRST INTERVIEW QUESTION
+    // START INTERVIEW
     // =========================================================
 
     const startInterview = async () => {
@@ -87,7 +107,8 @@ export default function MockInterview() {
                     method: "POST",
 
                     headers: {
-                        "Content-Type": "application/json"
+                        "Content-Type":
+                            "application/json"
                     },
 
                     body: JSON.stringify({
@@ -137,7 +158,12 @@ export default function MockInterview() {
 
             setQuestionNumber(1);
 
+            // Reset previous interview
             setEvaluation(null);
+
+            setEvaluations([]);
+
+            setShowResults(false);
 
             setTranscript("");
 
@@ -270,7 +296,7 @@ export default function MockInterview() {
                 );
 
 
-                // Stop microphone
+                // Stop microphone tracks
 
                 stream
                     .getTracks()
@@ -545,7 +571,8 @@ export default function MockInterview() {
                     method: "POST",
 
                     headers: {
-                        "Content-Type": "application/json"
+                        "Content-Type":
+                            "application/json"
                     },
 
                     body: JSON.stringify({
@@ -598,7 +625,19 @@ export default function MockInterview() {
             );
 
 
+            // Store current evaluation
+
             setEvaluation(data);
+
+
+            // Store evaluation for final results
+
+            setEvaluations(
+                previous => [
+                    ...previous,
+                    data
+                ]
+            );
 
 
         } catch (error) {
@@ -628,13 +667,13 @@ export default function MockInterview() {
 
     const nextQuestion = async () => {
 
-        // Finish after question 5
+        // =====================================================
+        // FINISH AFTER QUESTION 5
+        // =====================================================
 
         if (questionNumber >= 5) {
 
-            alert(
-                "Interview completed!"
-            );
+            setShowResults(true);
 
             return;
 
@@ -665,7 +704,8 @@ export default function MockInterview() {
                     method: "POST",
 
                     headers: {
-                        "Content-Type": "application/json"
+                        "Content-Type":
+                            "application/json"
                     },
 
                     body: JSON.stringify({
@@ -728,7 +768,7 @@ export default function MockInterview() {
 
 
             setQuestionNumber(
-                (previous) =>
+                previous =>
                     previous + 1
             );
 
@@ -799,6 +839,73 @@ export default function MockInterview() {
 
 
     // =========================================================
+    // RESULT CALCULATIONS
+    // =========================================================
+
+    const calculateAverage = (field) => {
+
+        if (evaluations.length === 0) {
+
+            return 0;
+
+        }
+
+        const total =
+            evaluations.reduce(
+                (sum, item) =>
+                    sum +
+                    (Number(item[field]) || 0),
+                0
+            );
+
+        return Math.round(
+            total / evaluations.length
+        );
+
+    };
+
+
+    const overallScore =
+        calculateAverage("score");
+
+    const overallConfidence =
+        calculateAverage("confidence");
+
+    const overallCommunication =
+        calculateAverage("communication");
+
+    const overallTechnicalAccuracy =
+        calculateAverage(
+            "technicalAccuracy"
+        );
+
+
+    const getPerformanceLabel = (score) => {
+
+        if (score >= 85) {
+
+            return "Excellent";
+
+        }
+
+        if (score >= 70) {
+
+            return "Good";
+
+        }
+
+        if (score >= 50) {
+
+            return "Needs Improvement";
+
+        }
+
+        return "Keep Practicing";
+
+    };
+
+
+    // =========================================================
     // UI
     // =========================================================
 
@@ -808,10 +915,177 @@ export default function MockInterview() {
 
 
             {/* =================================================
-                SETUP SCREEN
+                FINAL RESULTS SCREEN
             ================================================= */}
 
-            {!started ? (
+            {showResults ? (
+
+                <div className="interview-results">
+
+
+                    {/* RESULTS HEADER */}
+
+                    <div className="results-header">
+
+                        <div className="interview-icon">
+                            🏆
+                        </div>
+
+                        <span className="interview-label">
+                            INTERVIEW COMPLETE
+                        </span>
+
+                        <h1>
+                            Your Interview Results
+                        </h1>
+
+                        <p>
+                            Here's how you performed
+                            across all{" "}
+                            {evaluations.length}
+                            {" "}questions.
+                        </p>
+
+                    </div>
+
+
+                    {/* OVERALL SCORE */}
+
+                    <div className="overall-result-card">
+
+                        <span>
+                            Overall Score
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                {overallScore}
+                            </strong>
+
+                            <small>
+                                / 100
+                            </small>
+
+                        </div>
+
+                        <h2>
+                            {getPerformanceLabel(
+                                overallScore
+                            )}
+                        </h2>
+
+                    </div>
+
+
+                    {/* SCORE GRID */}
+
+                    <div className="result-score-grid">
+
+
+                        <div className="result-score-card">
+
+                            <span>
+                                Confidence
+                            </span>
+
+                            <strong>
+                                {overallConfidence}/100
+                            </strong>
+
+                        </div>
+
+
+                        <div className="result-score-card">
+
+                            <span>
+                                Communication
+                            </span>
+
+                            <strong>
+                                {overallCommunication}/100
+                            </strong>
+
+                        </div>
+
+
+                        <div className="result-score-card">
+
+                            <span>
+                                Technical Accuracy
+                            </span>
+
+                            <strong>
+                                {overallTechnicalAccuracy}/100
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    {/* SUMMARY */}
+
+                    <div className="results-summary-card">
+
+                        <h2>
+                            Performance Summary
+                        </h2>
+
+                        <p>
+                            You completed a{" "}
+                            {evaluations.length}
+                            -question{" "}
+                            {type.toLowerCase()}
+                            {" "}mock interview for the{" "}
+                            {role} role at{" "}
+                            {difficulty.toLowerCase()}
+                            {" "}difficulty.
+                        </p>
+
+                    </div>
+
+
+                    {/* START NEW INTERVIEW */}
+
+                    <button
+                        className="start-interview-button"
+                        onClick={() => {
+
+                            setStarted(false);
+
+                            setShowResults(false);
+
+                            setQuestion("");
+
+                            setQuestionNumber(1);
+
+                            setEvaluation(null);
+
+                            setEvaluations([]);
+
+                            setTranscript("");
+
+                            setInterimTranscript("");
+
+                            setAudioURL("");
+
+                        }}
+                    >
+
+                        Start New Interview →
+
+                    </button>
+
+                </div>
+
+
+            ) : !started ? (
+
+
+                /* =================================================
+                   SETUP SCREEN
+                ================================================= */
 
                 <div className="interview-setup">
 
@@ -965,11 +1239,13 @@ export default function MockInterview() {
                         </div>
 
 
-                        {/* START INTERVIEW */}
+                        {/* START BUTTON */}
 
                         <button
                             className="start-interview-button"
-                            onClick={startInterview}
+                            onClick={
+                                startInterview
+                            }
                             disabled={loading}
                         >
 
@@ -979,9 +1255,11 @@ export default function MockInterview() {
                             }
 
                             {!loading && (
+
                                 <span>
                                     →
                                 </span>
+
                             )}
 
                         </button>
@@ -1001,9 +1279,7 @@ export default function MockInterview() {
                 <div className="interview-screen">
 
 
-                    {/* =================================================
-                        TOP BAR
-                    ================================================= */}
+                    {/* TOP BAR */}
 
                     <div className="interview-topbar">
 
@@ -1030,9 +1306,7 @@ export default function MockInterview() {
                     </div>
 
 
-                    {/* =================================================
-                        QUESTION CARD
-                    ================================================= */}
+                    {/* QUESTION CARD */}
 
                     <div className="question-card">
 
@@ -1042,9 +1316,8 @@ export default function MockInterview() {
                                 category ||
                                 type ||
                                 "INTERVIEW"
-                            ).toUpperCase()}{" "}
-
-                            QUESTION
+                            ).toUpperCase()}
+                            {" "}QUESTION
 
                         </span>
 
@@ -1063,16 +1336,12 @@ export default function MockInterview() {
                     </div>
 
 
-                    {/* =================================================
-                        ANSWER CARD
-                    ================================================= */}
+                    {/* ANSWER CARD */}
 
                     <div className="answer-card">
 
 
-                        {/* =================================================
-                            RECORDING STATUS
-                        ================================================= */}
+                        {/* RECORDING STATUS */}
 
                         <div className="recording-status">
 
@@ -1112,9 +1381,7 @@ export default function MockInterview() {
                         </div>
 
 
-                        {/* =================================================
-                            RECORD / STOP BUTTON
-                        ================================================= */}
+                        {/* RECORD / STOP BUTTON */}
 
                         {!isRecording ? (
 
@@ -1145,9 +1412,7 @@ export default function MockInterview() {
                         )}
 
 
-                        {/* =================================================
-                            LIVE TRANSCRIPT
-                        ================================================= */}
+                        {/* LIVE TRANSCRIPT */}
 
                         {isRecording && (
 
@@ -1179,9 +1444,7 @@ export default function MockInterview() {
                         )}
 
 
-                        {/* =================================================
-                            RECORDED ANSWER
-                        ================================================= */}
+                        {/* RECORDED ANSWER */}
 
                         {audioURL && (
 
@@ -1199,9 +1462,7 @@ export default function MockInterview() {
                                 />
 
 
-                                {/* =================================================
-                                    SUBMIT ANSWER
-                                ================================================= */}
+                                {/* SUBMIT ANSWER */}
 
                                 {!evaluation && (
 
@@ -1229,18 +1490,14 @@ export default function MockInterview() {
                         )}
 
 
-                        {/* =================================================
-                            AI EVALUATION
-                        ================================================= */}
+                        {/* AI EVALUATION */}
 
                         {evaluation && (
 
                             <div className="evaluation-card">
 
 
-                                {/* =================================================
-                                    EVALUATION HEADER
-                                ================================================= */}
+                                {/* EVALUATION HEADER */}
 
                                 <div className="evaluation-header">
 
@@ -1267,9 +1524,7 @@ export default function MockInterview() {
                                 </div>
 
 
-                                {/* =================================================
-                                    SCORE GRID
-                                ================================================= */}
+                                {/* SCORE GRID */}
 
                                 <div className="score-grid">
 
@@ -1324,9 +1579,7 @@ export default function MockInterview() {
                                 </div>
 
 
-                                {/* =================================================
-                                    FEEDBACK
-                                ================================================= */}
+                                {/* FEEDBACK */}
 
                                 <div className="feedback-section">
 
@@ -1344,9 +1597,7 @@ export default function MockInterview() {
                                 </div>
 
 
-                                {/* =================================================
-                                    STRENGTHS
-                                ================================================= */}
+                                {/* STRENGTHS */}
 
                                 <div className="feedback-section">
 
@@ -1393,9 +1644,7 @@ export default function MockInterview() {
                                 </div>
 
 
-                                {/* =================================================
-                                    IMPROVEMENTS
-                                ================================================= */}
+                                {/* AREAS TO IMPROVE */}
 
                                 <div className="feedback-section">
 
@@ -1442,9 +1691,7 @@ export default function MockInterview() {
                                 </div>
 
 
-                                {/* =================================================
-                                    NEXT QUESTION
-                                ================================================= */}
+                                {/* NEXT QUESTION */}
 
                                 <button
                                     className="next-question-button"
@@ -1460,8 +1707,7 @@ export default function MockInterview() {
 
                                         ? "Generating Question..."
 
-                                        : questionNumber >=
-                                          5
+                                        : questionNumber >= 5
 
                                         ? "Finish Interview"
 

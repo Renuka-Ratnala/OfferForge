@@ -1,156 +1,633 @@
-import { useState, useEffect } from "react";
-import api from "../api/api";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+    FaUser,
+    FaEnvelope,
+    FaLock,
+    FaEye,
+    FaEyeSlash,
+    FaArrowRight
+} from "react-icons/fa";
+import { registerUser } from "../services/authService";
+import "./Auth.css";
 
-import ResumeOverview from "../components/ResumeOverview";
-import ATSGauge from "../components/ATSGauge";
-import ResumeHealth from "../components/ResumeHealth";
- 
-import "./Resume.css";
+export default function Register() {
 
-export default function Resume() {
+    const navigate = useNavigate();
 
-    const [file, setFile] = useState(null);
-    const [profile, setProfile] = useState(null);
-    const [analysis, setAnalysis] = useState(null);
+    const [showPassword, setShowPassword] =
+        useState(false);
 
-    useEffect(() => {
-        fetchProfile();
-        fetchAnalysis();
-    }, []);
+    const [showConfirmPassword, setShowConfirmPassword] =
+        useState(false);
 
-    const fetchProfile = async () => {
-        try {
-            const response = await api.get("/users/profile");
-            setProfile(response.data);
-        } catch (err) {
-            console.log(err);
-        }
+    const [loading, setLoading] =
+        useState(false);
+
+    const [form, setForm] = useState({
+        fullName: "",
+        email: "",
+        password: "",
+        confirmPassword: ""
+    });
+
+    const [error, setError] =
+        useState("");
+
+
+    // =========================================================
+    // HANDLE INPUT CHANGES
+    // =========================================================
+
+    const handleChange = (e) => {
+
+        setForm({
+            ...form,
+            [e.target.name]: e.target.value
+        });
+
+        setError("");
+
     };
 
-    const fetchAnalysis = async () => {
-        try {
-            const response = await api.get(
-                "/users/resume/analyze"
+
+    // =========================================================
+    // REGISTER
+    // =========================================================
+
+    const handleSubmit = async (e) => {
+
+        e.preventDefault();
+
+
+        // -----------------------------------------------------
+        // VALIDATION
+        // -----------------------------------------------------
+
+        if (
+            !form.fullName ||
+            !form.email ||
+            !form.password ||
+            !form.confirmPassword
+        ) {
+
+            setError(
+                "Please fill in all fields."
             );
 
-            console.log("Resume analysis:", response.data);
-
-            setAnalysis(response.data);
-
-        } catch (err) {
-            console.log(err);
-        }
-    };
-
-    const uploadResume = async (selectedFile) => {
-
-        if (!selectedFile) {
-            alert("Please select a resume.");
             return;
         }
 
-        const formData = new FormData();
 
-        formData.append("file", selectedFile);
+        if (
+            form.password !==
+            form.confirmPassword
+        ) {
+
+            setError(
+                "Passwords do not match."
+            );
+
+            return;
+        }
+
+
+        if (form.password.length < 6) {
+
+            setError(
+                "Password must be at least 6 characters."
+            );
+
+            return;
+        }
+
+
+        setLoading(true);
+        setError("");
+
+
+        // -----------------------------------------------------
+        // API REQUEST
+        // -----------------------------------------------------
 
         try {
 
-            await api.post(
-                "/users/resume",
-                formData,
-                {
-                    headers: {
-                        "Content-Type": "multipart/form-data"
-                    }
-                }
+            await registerUser({
+
+                fullName: form.fullName,
+
+                email: form.email,
+
+                password: form.password
+
+            });
+
+
+            // Registration successful
+            // Go to login page
+
+            navigate("/login");
+
+
+        } catch (error) {
+
+            console.error(
+                "Registration error:",
+                error
             );
 
-            setFile(selectedFile);
 
-            await fetchProfile();
-            await fetchAnalysis();
+            setError(
+                error?.response?.data?.message ||
+                error?.response?.data ||
+                "Registration failed. Please try again."
+            );
 
-            alert("Resume uploaded successfully!");
 
-        } catch (err) {
+        } finally {
 
-            console.log("Resume upload error:", err);
-
-            alert("Upload failed.");
+            setLoading(false);
 
         }
+
     };
+
+
+    // =========================================================
+    // UI
+    // =========================================================
 
     return (
 
-        <div className="resume-page">
+        <div className="auth-page">
 
-            {/* ================= HEADER ================= */}
 
-            <div className="resume-header">
+            {/* =================================================
+                LEFT BRAND SECTION
+            ================================================= */}
 
-                <div>
+            <div className="auth-brand-section">
+
+
+                {/* BRAND */}
+
+                <div className="auth-brand">
+
+                    <div className="auth-logo">
+                        ⚡
+                    </div>
+
+                    <span>
+                        OfferForge
+                    </span>
+
+                </div>
+
+
+                {/* BRAND CONTENT */}
+
+                <div className="auth-brand-content">
+
+                    <span className="auth-eyebrow">
+                        BUILD YOUR CAREER
+                    </span>
+
 
                     <h1>
-                        Resume Manager <span>📄</span>
+
+                        Prepare smarter.
+
+                        <br />
+
+                        <span>
+                            Interview better.
+                        </span>
+
                     </h1>
 
+
                     <p>
-                        Upload, analyze and optimize your resume for better ATS scores.
+
+                        Create your OfferForge account
+                        and start preparing with
+                        AI-powered career tools built
+                        for real interviews.
+
                     </p>
 
+
+                    {/* FEATURES */}
+
+                    <div className="auth-features">
+
+
+                        {/* FEATURE 1 */}
+
+                        <div className="auth-feature">
+
+                            <span>
+                                ✦
+                            </span>
+
+                            <div>
+
+                                <strong>
+                                    AI Mock Interviews
+                                </strong>
+
+                                <p>
+                                    Practice realistic
+                                    interview questions.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        {/* FEATURE 2 */}
+
+                        <div className="auth-feature">
+
+                            <span>
+                                ✦
+                            </span>
+
+                            <div>
+
+                                <strong>
+                                    Resume Intelligence
+                                </strong>
+
+                                <p>
+                                    Optimize your resume
+                                    for better opportunities.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        {/* FEATURE 3 */}
+
+                        <div className="auth-feature">
+
+                            <span>
+                                ✦
+                            </span>
+
+                            <div>
+
+                                <strong>
+                                    Track Your Progress
+                                </strong>
+
+                                <p>
+                                    Turn every practice session
+                                    into measurable improvement.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+
+                {/* FOOTER */}
+
+                <div className="auth-brand-footer">
+
+                    One platform. Better preparation.
+                    Better opportunities.
+
                 </div>
 
             </div>
 
 
-            {/* ================= RESUME + ATS ================= */}
+            {/* =================================================
+                RIGHT REGISTER SECTION
+            ================================================= */}
 
-            <div className="resume-top-grid">
+            <div className="auth-form-section">
 
-                <div className="resume-panel">
+                <div className="auth-card">
 
-                    <ResumeOverview
-                        profile={profile}
-                        file={file}
-                        setFile={setFile}
-                        uploadResume={uploadResume}
-                    />
+
+                    {/* =================================================
+                        HEADER
+                    ================================================= */}
+
+                    <div className="auth-card-header">
+
+
+                        {/* MOBILE LOGO */}
+
+                        <span className="mobile-auth-logo">
+
+                            ⚡ OfferForge
+
+                        </span>
+
+
+                        <h2>
+                            Create your account
+                        </h2>
+
+
+                        <p>
+
+                            Start building your career
+                            with smarter preparation.
+
+                        </p>
+
+                    </div>
+
+
+                    {/* =================================================
+                        ERROR MESSAGE
+                    ================================================= */}
+
+                    {error && (
+
+                        <div className="auth-error">
+
+                            <span>
+                                ⚠
+                            </span>
+
+                            {error}
+
+                        </div>
+
+                    )}
+
+
+                    {/* =================================================
+                        REGISTRATION FORM
+                    ================================================= */}
+
+                    <form
+                        onSubmit={handleSubmit}
+                        className="auth-form"
+                    >
+
+
+                        {/* =================================================
+                            FULL NAME
+                        ================================================= */}
+
+                        <div className="auth-field">
+
+                            <label>
+                                Full name
+                            </label>
+
+
+                            <div className="auth-input-wrapper">
+
+                                <FaUser />
+
+
+                                <input
+                                    type="text"
+                                    name="fullName"
+                                    value={
+                                        form.fullName
+                                    }
+                                    placeholder="Your name"
+                                    onChange={
+                                        handleChange
+                                    }
+                                    autoComplete="name"
+                                />
+
+                            </div>
+
+                        </div>
+
+
+                        {/* =================================================
+                            EMAIL
+                        ================================================= */}
+
+                        <div className="auth-field">
+
+                            <label>
+                                Email address
+                            </label>
+
+
+                            <div className="auth-input-wrapper">
+
+                                <FaEnvelope />
+
+
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={
+                                        form.email
+                                    }
+                                    placeholder="you@example.com"
+                                    onChange={
+                                        handleChange
+                                    }
+                                    autoComplete="email"
+                                />
+
+                            </div>
+
+                        </div>
+
+
+                        {/* =================================================
+                            PASSWORD
+                        ================================================= */}
+
+                        <div className="auth-field">
+
+                            <label>
+                                Password
+                            </label>
+
+
+                            <div className="auth-input-wrapper">
+
+                                <FaLock />
+
+
+                                <input
+                                    type={
+                                        showPassword
+                                            ? "text"
+                                            : "password"
+                                    }
+                                    name="password"
+                                    value={
+                                        form.password
+                                    }
+                                    placeholder="Create a password"
+                                    onChange={
+                                        handleChange
+                                    }
+                                    autoComplete="new-password"
+                                />
+
+
+                                <button
+                                    type="button"
+                                    className="password-toggle"
+                                    onClick={() =>
+                                        setShowPassword(
+                                            !showPassword
+                                        )
+                                    }
+                                >
+
+                                    {showPassword
+                                        ? <FaEyeSlash />
+                                        : <FaEye />
+                                    }
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        {/* =================================================
+                            CONFIRM PASSWORD
+                        ================================================= */}
+
+                        <div className="auth-field">
+
+                            <label>
+                                Confirm password
+                            </label>
+
+
+                            <div className="auth-input-wrapper">
+
+                                <FaLock />
+
+
+                                <input
+                                    type={
+                                        showConfirmPassword
+                                            ? "text"
+                                            : "password"
+                                    }
+                                    name="confirmPassword"
+                                    value={
+                                        form.confirmPassword
+                                    }
+                                    placeholder="Confirm your password"
+                                    onChange={
+                                        handleChange
+                                    }
+                                    autoComplete="new-password"
+                                />
+
+
+                                <button
+                                    type="button"
+                                    className="password-toggle"
+                                    onClick={() =>
+                                        setShowConfirmPassword(
+                                            !showConfirmPassword
+                                        )
+                                    }
+                                >
+
+                                    {showConfirmPassword
+                                        ? <FaEyeSlash />
+                                        : <FaEye />
+                                    }
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        {/* =================================================
+                            REGISTER BUTTON
+                        ================================================= */}
+
+                        <button
+                            type="submit"
+                            className="auth-submit-button"
+                            disabled={loading}
+                        >
+
+                            {loading ? (
+
+                                <>
+
+                                    <span className="auth-spinner" />
+
+                                    Creating account...
+
+                                </>
+
+                            ) : (
+
+                                <>
+
+                                    Create account
+
+                                    <FaArrowRight />
+
+                                </>
+
+                            )}
+
+                        </button>
+
+                    </form>
+
+
+                    {/* =================================================
+                        LOGIN LINK
+                    ================================================= */}
+
+                    <div className="auth-divider">
+
+                        <span />
+
+                        <p>
+                            Already have an account?
+                        </p>
+
+                        <span />
+
+                    </div>
+
+
+                    <Link
+                        to="/login"
+                        className="auth-secondary-button"
+                    >
+                        Sign in instead
+                    </Link>
+
 
                 </div>
 
-
-                <div className="resume-panel">
-
-                    <ATSGauge
-                        score={analysis?.matchScore || 0}
-                    />
-
-                </div>
-
             </div>
 
-
-            {/* ================= RESUME HEALTH ================= */}
-
-            <div className="resume-section">
-
-                <ResumeHealth />
-
-            </div>
-
-
-            {/* ================= AI RESUME COACH ================= */}
-
-            <div className="resume-section">
-
-                <AIResumeSuggestions
-                    suggestions={analysis?.suggestion}
-                />
-
-            </div>
 
         </div>
 
     );
+
 }

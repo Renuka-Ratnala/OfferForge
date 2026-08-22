@@ -1,13 +1,24 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
+import {
+    FaEnvelope,
+    FaLock,
+    FaEye,
+    FaEyeSlash,
+    FaArrowRight
+} from "react-icons/fa";
 import { loginUser } from "../services/authService";
+import "./Auth.css";
 
 export default function Login() {
 
     const navigate = useNavigate();
 
-    const [showPassword, setShowPassword] = useState(false);
+    const [showPassword, setShowPassword] =
+        useState(false);
+
+    const [loading, setLoading] =
+        useState(false);
 
     const [form, setForm] = useState({
         email: "",
@@ -16,111 +27,387 @@ export default function Login() {
 
     const [error, setError] = useState("");
 
+
     const handleChange = (e) => {
+
         setForm({
             ...form,
             [e.target.name]: e.target.value
         });
+
+        setError("");
+
     };
+
 
     const handleSubmit = async (e) => {
 
         e.preventDefault();
 
+        if (!form.email || !form.password) {
+
+            setError(
+                "Please enter your email and password."
+            );
+
+            return;
+        }
+
+        setLoading(true);
+        setError("");
+
         try {
 
-            const response = await loginUser(form);
+            const response =
+                await loginUser(form);
 
-            localStorage.setItem("token", response.data.token);
+            localStorage.setItem(
+                "token",
+                response.data.token
+            );
 
             navigate("/dashboard");
 
-        } catch {
+        } catch (error) {
 
-            setError("Invalid Email or Password");
+            console.error(
+                "Login error:",
+                error
+            );
+
+            setError(
+                "Invalid email or password."
+            );
+
+        } finally {
+
+            setLoading(false);
 
         }
 
     };
 
+
     return (
 
-        <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="auth-page">
 
-            <div className="w-full max-w-md bg-slate-900 rounded-3xl shadow-2xl p-10">
 
-                <h1 className="text-4xl font-bold text-center text-white">
-                    OfferForge
-                </h1>
+            {/* =================================================
+                LEFT BRAND SECTION
+            ================================================= */}
 
-                <p className="text-gray-400 text-center mt-2">
-                    AI Powered Career Intelligence
-                </p>
+            <div className="auth-brand-section">
 
-                {error && (
-                    <div className="mt-5 bg-red-500 text-white rounded-lg p-3 text-center">
-                        {error}
-                    </div>
-                )}
+                <div className="auth-brand">
 
-                <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-
-                    <div className="relative">
-
-                        <FaEnvelope className="absolute left-4 top-4 text-gray-400"/>
-
-                        <input
-                            type="email"
-                            name="email"
-                            placeholder="Email"
-                            className="w-full bg-slate-800 rounded-lg py-3 pl-12 pr-4 text-white outline-none"
-                            onChange={handleChange}
-                        />
-
+                    <div className="auth-logo">
+                        ⚡
                     </div>
 
-                    <div className="relative">
+                    <span>
+                        OfferForge
+                    </span>
 
-                        <FaLock className="absolute left-4 top-4 text-gray-400"/>
+                </div>
 
-                        <input
-                            type={showPassword ? "text" : "password"}
-                            name="password"
-                            placeholder="Password"
-                            className="w-full bg-slate-800 rounded-lg py-3 pl-12 pr-12 text-white outline-none"
-                            onChange={handleChange}
-                        />
+
+                <div className="auth-brand-content">
+
+                    <span className="auth-eyebrow">
+                        AI-POWERED CAREER INTELLIGENCE
+                    </span>
+
+                    <h1>
+                        Build confidence.
+                        <br />
+                        <span>Build your career.</span>
+                    </h1>
+
+                    <p>
+                        Practice interviews, analyze your
+                        resume, and turn your preparation
+                        into real career opportunities.
+                    </p>
+
+
+                    <div className="auth-features">
+
+                        <div className="auth-feature">
+
+                            <span>
+                                ✦
+                            </span>
+
+                            <div>
+
+                                <strong>
+                                    AI Mock Interviews
+                                </strong>
+
+                                <p>
+                                    Practice realistic
+                                    interview questions.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div className="auth-feature">
+
+                            <span>
+                                ✦
+                            </span>
+
+                            <div>
+
+                                <strong>
+                                    Resume Intelligence
+                                </strong>
+
+                                <p>
+                                    Improve your resume
+                                    with AI-powered insights.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div className="auth-feature">
+
+                            <span>
+                                ✦
+                            </span>
+
+                            <div>
+
+                                <strong>
+                                    Personalized Feedback
+                                </strong>
+
+                                <p>
+                                    Understand your strengths
+                                    and areas to improve.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div className="auth-brand-footer">
+                    Your career deserves better preparation.
+                </div>
+
+            </div>
+
+
+            {/* =================================================
+                RIGHT LOGIN SECTION
+            ================================================= */}
+
+            <div className="auth-form-section">
+
+                <div className="auth-card">
+
+
+                    {/* HEADER */}
+
+                    <div className="auth-card-header">
+
+                        <span className="mobile-auth-logo">
+                            ⚡ OfferForge
+                        </span>
+
+                        <h2>
+                            Welcome back
+                        </h2>
+
+                        <p>
+                            Sign in to continue your
+                            career journey.
+                        </p>
+
+                    </div>
+
+
+                    {/* ERROR */}
+
+                    {error && (
+
+                        <div className="auth-error">
+
+                            <span>
+                                ⚠
+                            </span>
+
+                            {error}
+
+                        </div>
+
+                    )}
+
+
+                    {/* FORM */}
+
+                    <form
+                        onSubmit={handleSubmit}
+                        className="auth-form"
+                    >
+
+
+                        {/* EMAIL */}
+
+                        <div className="auth-field">
+
+                            <label>
+                                Email address
+                            </label>
+
+                            <div className="auth-input-wrapper">
+
+                                <FaEnvelope />
+
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={form.email}
+                                    placeholder="you@example.com"
+                                    onChange={
+                                        handleChange
+                                    }
+                                    autoComplete="email"
+                                />
+
+                            </div>
+
+                        </div>
+
+
+                        {/* PASSWORD */}
+
+                        <div className="auth-field">
+
+                            <div className="auth-label-row">
+
+                                <label>
+                                    Password
+                                </label>
+
+                            </div>
+
+
+                            <div className="auth-input-wrapper">
+
+                                <FaLock />
+
+                                <input
+                                    type={
+                                        showPassword
+                                            ? "text"
+                                            : "password"
+                                    }
+                                    name="password"
+                                    value={
+                                        form.password
+                                    }
+                                    placeholder="Enter your password"
+                                    onChange={
+                                        handleChange
+                                    }
+                                    autoComplete="current-password"
+                                />
+
+
+                                <button
+                                    type="button"
+                                    className="password-toggle"
+                                    onClick={() =>
+                                        setShowPassword(
+                                            !showPassword
+                                        )
+                                    }
+                                >
+
+                                    {showPassword
+                                        ? <FaEyeSlash />
+                                        : <FaEye />
+                                    }
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        {/* LOGIN BUTTON */}
 
                         <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-4 top-4 text-gray-400"
+                            type="submit"
+                            className="auth-submit-button"
+                            disabled={loading}
                         >
-                            {showPassword ? <FaEyeSlash/> : <FaEye/>}
+
+                            {loading ? (
+
+                                <>
+
+                                    <span className="auth-spinner" />
+
+                                    Signing in...
+
+                                </>
+
+                            ) : (
+
+                                <>
+
+                                    Sign in
+
+                                    <FaArrowRight />
+
+                                </>
+
+                            )}
+
                         </button>
+
+                    </form>
+
+
+                    {/* REGISTER */}
+
+                    <div className="auth-divider">
+
+                        <span />
+
+                        <p>
+                            New to OfferForge?
+                        </p>
+
+                        <span />
 
                     </div>
 
-                    <button
-                        className="w-full bg-blue-600 hover:bg-blue-700 transition rounded-lg py-3 text-white font-semibold"
-                    >
-                        Login
-                    </button>
-
-                </form>
-
-                <p className="text-center text-gray-400 mt-6">
-
-                    Don't have an account?
 
                     <Link
                         to="/register"
-                        className="text-blue-400 ml-2"
+                        className="auth-secondary-button"
                     >
-                        Register
+                        Create an account
                     </Link>
 
-                </p>
+
+                </div>
 
             </div>
 
