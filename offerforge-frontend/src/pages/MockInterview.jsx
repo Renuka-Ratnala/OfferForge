@@ -93,7 +93,8 @@ export default function MockInterview() {
                     body: JSON.stringify({
                         role: role,
                         type: type,
-                        difficulty: difficulty
+                        difficulty: difficulty,
+                        questionNumber: 1
                     })
                 }
             );
@@ -544,8 +545,7 @@ export default function MockInterview() {
                     method: "POST",
 
                     headers: {
-                        "Content-Type":
-                            "application/json"
+                        "Content-Type": "application/json"
                     },
 
                     body: JSON.stringify({
@@ -665,8 +665,7 @@ export default function MockInterview() {
                     method: "POST",
 
                     headers: {
-                        "Content-Type":
-                            "application/json"
+                        "Content-Type": "application/json"
                     },
 
                     body: JSON.stringify({
@@ -675,7 +674,10 @@ export default function MockInterview() {
 
                         type: type,
 
-                        difficulty: difficulty
+                        difficulty: difficulty,
+
+                        questionNumber:
+                            questionNumber + 1
 
                     })
                 }

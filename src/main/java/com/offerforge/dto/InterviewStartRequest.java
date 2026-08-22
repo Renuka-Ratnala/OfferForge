@@ -10,4 +10,5 @@ public class InterviewStartRequest {
     private String role;
     private String type;
     private String difficulty;
+    private int questionNumber;
 }

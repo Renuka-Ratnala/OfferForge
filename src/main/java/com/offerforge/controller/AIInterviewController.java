@@ -23,7 +23,8 @@ public class AIInterviewController {
         return aiInterviewService.generateQuestion(
                 request.getRole(),
                 request.getType(),
-                request.getDifficulty()
+                request.getDifficulty(),
+                request.getQuestionNumber()
         );
     }
 

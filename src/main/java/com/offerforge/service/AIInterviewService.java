@@ -34,7 +34,8 @@ public class AIInterviewService {
     public InterviewQuestionResponse generateQuestion(
             String role,
             String type,
-            String difficulty
+            String difficulty,
+            int questionNumber
     ) {
 
         String url =
@@ -42,28 +43,44 @@ public class AIInterviewService {
                         + apiKey;
 
         String prompt = """
-                You are OfferForge AI Interviewer.
+            You are OfferForge AI Interviewer conducting a 5-question mock interview.
 
-                Generate ONE interview question.
+            Candidate role: %s
+            Interview type: %s
+            Difficulty: %s
+            Current question number: %d of 5
 
-                Candidate role: %s
-                Interview type: %s
-                Difficulty: %s
+            Generate ONE interview question.
 
-                Rules:
-                - Generate exactly one question.
-                - Make it realistic for a software engineering interview.
-                - Match the selected role.
-                - Match the interview type.
-                - Match the difficulty.
-                - Do not give the answer.
-                - Do not add explanations.
-                - Return only the interview question.
-                """.formatted(
+            Rules:
+            - Generate exactly one question.
+            - This is question %d of a 5-question interview.
+            - Make the question different from typical introductory questions when question number is greater than 1.
+            - Do not repeat the same question.
+            - Match the selected role.
+            - Match the interview type.
+            - Match the difficulty.
+            - Make it realistic for a software engineering interview.
+            - Do not give the answer.
+            - Do not add explanations.
+            - Return only the interview question.
+
+            Question progression:
+            Question 1: Fundamental or introductory concept.
+            Question 2: Practical application or problem-solving.
+            Question 3: Deeper technical reasoning.
+            Question 4: Real-world/project scenario.
+            Question 5: Challenging final question.
+
+            """.formatted(
                 role,
                 type,
-                difficulty
+                difficulty,
+                questionNumber,
+                questionNumber
         );
+
+        // KEEP YOUR EXISTING GEMINI REQUEST CODE BELOW THIS
 
         Map<String, Object> text = new HashMap<>();
         text.put("text", prompt);
