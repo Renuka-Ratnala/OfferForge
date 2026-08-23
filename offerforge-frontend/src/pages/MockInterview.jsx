@@ -74,9 +74,8 @@ export default function MockInterview() {
     const recognitionRef =
         useRef(null);
 
-    // IMPORTANT:
-    // Keeps transcript immediately available even before
-    // React finishes updating state.
+    // Keeps transcript immediately available
+    // even before React updates state.
     const transcriptRef =
         useRef("");
 
@@ -214,9 +213,7 @@ export default function MockInterview() {
                 "Requesting microphone..."
             );
 
-            // ---------------------------------------------
-            // CLEAR PREVIOUS ANSWER
-            // ---------------------------------------------
+            // Clear previous answer
 
             setTranscript("");
 
@@ -229,9 +226,9 @@ export default function MockInterview() {
             transcriptRef.current = "";
 
 
-            // ---------------------------------------------
+            // =================================================
             // MICROPHONE
-            // ---------------------------------------------
+            // =================================================
 
             const stream =
                 await navigator.mediaDevices.getUserMedia(
@@ -245,9 +242,9 @@ export default function MockInterview() {
             );
 
 
-            // ---------------------------------------------
+            // =================================================
             // MEDIA RECORDER
-            // ---------------------------------------------
+            // =================================================
 
             const mediaRecorder =
                 new MediaRecorder(stream);
@@ -258,9 +255,9 @@ export default function MockInterview() {
             audioChunksRef.current = [];
 
 
-            // ---------------------------------------------
+            // =================================================
             // AUDIO DATA
-            // ---------------------------------------------
+            // =================================================
 
             mediaRecorder.ondataavailable =
                 (event) => {
@@ -279,9 +276,9 @@ export default function MockInterview() {
                 };
 
 
-            // ---------------------------------------------
+            // =================================================
             // RECORDING STOPPED
-            // ---------------------------------------------
+            // =================================================
 
             mediaRecorder.onstop = () => {
 
@@ -308,8 +305,7 @@ export default function MockInterview() {
                     "Audio created successfully"
                 );
 
-
-                // Stop microphone tracks
+                // Stop microphone
 
                 stream
                     .getTracks()
@@ -329,7 +325,6 @@ export default function MockInterview() {
             const SpeechRecognition =
                 window.SpeechRecognition ||
                 window.webkitSpeechRecognition;
-
 
             if (!SpeechRecognition) {
 
@@ -354,7 +349,6 @@ export default function MockInterview() {
 
             recognitionRef.current =
                 recognition;
-
 
             recognition.continuous =
                 true;
@@ -390,7 +384,6 @@ export default function MockInterview() {
 
                     let interimText = "";
 
-
                     for (
                         let i = event.resultIndex;
                         i < event.results.length;
@@ -400,7 +393,6 @@ export default function MockInterview() {
                         const text =
                             event.results[i][0]
                                 .transcript;
-
 
                         if (
                             event.results[i]
@@ -420,9 +412,8 @@ export default function MockInterview() {
                     }
 
 
-                    // -----------------------------------------
-                    // SAVE FINAL TRANSCRIPT TO REF + STATE
-                    // -----------------------------------------
+                    // Save final transcript
+                    // immediately to ref and state
 
                     if (finalText.trim()) {
 
@@ -442,9 +433,7 @@ export default function MockInterview() {
                     }
 
 
-                    // -----------------------------------------
-                    // LIVE INTERIM TEXT
-                    // -----------------------------------------
+                    // Live interim text
 
                     setInterimTranscript(
                         interimText
@@ -464,9 +453,6 @@ export default function MockInterview() {
                         "Speech recognition error:",
                         event.error
                     );
-
-                    // Do not stop audio recording
-                    // if speech recognition temporarily fails.
 
                 };
 
@@ -525,9 +511,7 @@ export default function MockInterview() {
         );
 
 
-        // ---------------------------------------------
-        // STOP MEDIA RECORDER
-        // ---------------------------------------------
+        // Stop media recorder
 
         if (
             mediaRecorderRef.current &&
@@ -540,9 +524,7 @@ export default function MockInterview() {
         }
 
 
-        // ---------------------------------------------
-        // STOP SPEECH RECOGNITION
-        // ---------------------------------------------
+        // Stop speech recognition
 
         if (recognitionRef.current) {
 
@@ -561,16 +543,14 @@ export default function MockInterview() {
         }
 
 
-        // ---------------------------------------------
-        // USE FINAL + INTERIM TEXT
-        // ---------------------------------------------
+        // Use the latest transcript
+        // directly from the ref
 
         const currentTranscript =
             transcriptRef.current.trim();
 
         const currentInterim =
             interimTranscript.trim();
-
 
         const finalAnswer =
             currentTranscript ||
@@ -611,128 +591,191 @@ export default function MockInterview() {
 
     const submitAnswer = async () => {
 
-        // Use ref first because React state updates
-        // are asynchronous.
+        // IMPORTANT:
+        // Use the ref because React state can update slightly later.
 
         const finalAnswer =
             transcriptRef.current.trim() ||
-            transcript.trim() ||
-            interimTranscript.trim();
-
+            transcript.trim();
 
         if (!finalAnswer) {
 
             alert(
-                "No speech was detected. Please record your answer again."
+                "Please record your answer before submitting."
             );
 
             return;
         }
 
+        if (submitting) {
+
+            return;
+
+        }
 
         setSubmitting(true);
 
+        const maxAttempts = 3;
+
         try {
 
-            console.log(
-                "Submitting answer for evaluation..."
-            );
+            for (
+                let attempt = 1;
+                attempt <= maxAttempts;
+                attempt++
+            ) {
 
-            console.log(
-                "Answer being submitted:",
-                finalAnswer
-            );
+                console.log(
+                    `Submitting answer... Attempt ${attempt}/${maxAttempts}`
+                );
+
+                try {
+
+                    const response =
+                        await fetch(
+                            `${API_URL}/api/ai/interview/evaluate`,
+                            {
+                                method: "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json"
+                                },
+
+                                body: JSON.stringify({
+
+                                    role: role,
+
+                                    type: type,
+
+                                    difficulty: difficulty,
+
+                                    question: question,
+
+                                    answer: finalAnswer
+
+                                })
+                            }
+                        );
 
 
-            const response = await fetch(
-                `${API_URL}/api/ai/interview/evaluate`,
-                {
-                    method: "POST",
+                    console.log(
+                        "Evaluation API status:",
+                        response.status
+                    );
 
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
 
-                    body: JSON.stringify({
+                    // =================================================
+                    // SUCCESS
+                    // =================================================
 
-                        role: role,
+                    if (response.ok) {
 
-                        type: type,
+                        const data =
+                            await response.json();
 
-                        difficulty: difficulty,
+                        console.log(
+                            "AI Evaluation:",
+                            data
+                        );
 
-                        question: question,
 
-                        answer: finalAnswer
+                        // Save current evaluation
 
-                    })
+                        setEvaluation(
+                            data
+                        );
+
+
+                        // IMPORTANT:
+                        // Store evaluation for final interview results.
+
+                        setEvaluations(
+                            (previous) => [
+                                ...previous,
+                                data
+                            ]
+                        );
+
+
+                        return;
+                    }
+
+
+                    // =================================================
+                    // SERVER ERROR
+                    // =================================================
+
+                    const errorText =
+                        await response.text();
+
+                    console.error(
+                        `Evaluation attempt ${attempt} failed:`,
+                        errorText
+                    );
+
+
+                    // Retry if attempts remain
+
+                    if (
+                        attempt <
+                        maxAttempts
+                    ) {
+
+                        console.log(
+                            "Retrying evaluation..."
+                        );
+
+                        await new Promise(
+                            (resolve) =>
+                                setTimeout(
+                                    resolve,
+                                    1500
+                                )
+                        );
+
+                    }
+
+                } catch (error) {
+
+                    console.error(
+                        `Evaluation attempt ${attempt} error:`,
+                        error
+                    );
+
+
+                    // Retry if attempts remain
+
+                    if (
+                        attempt <
+                        maxAttempts
+                    ) {
+
+                        console.log(
+                            "Retrying evaluation..."
+                        );
+
+                        await new Promise(
+                            (resolve) =>
+                                setTimeout(
+                                    resolve,
+                                    1500
+                                )
+                        );
+
+                    }
+
                 }
-            );
-
-
-            console.log(
-                "Evaluation API status:",
-                response.status
-            );
-
-
-            if (!response.ok) {
-
-                const errorText =
-                    await response.text();
-
-                console.error(
-                    "Evaluation API error:",
-                    errorText
-                );
-
-                throw new Error(
-                    `Server error: ${response.status}`
-                );
 
             }
 
 
-            const data =
-                await response.json();
-
-
-            console.log(
-                "AI Evaluation:",
-                data
-            );
-
-
-            // ---------------------------------------------
-            // STORE CURRENT EVALUATION
-            // ---------------------------------------------
-
-            setEvaluation(data);
-
-
-            // ---------------------------------------------
-            // STORE FOR FINAL RESULTS
-            // ---------------------------------------------
-
-            setEvaluations(
-                previous => [
-                    ...previous,
-                    data
-                ]
-            );
-
-
-        } catch (error) {
-
-            console.error(
-                "Evaluation failed:",
-                error
-            );
+            // =================================================
+            // ALL ATTEMPTS FAILED
+            // =================================================
 
             alert(
-                "Unable to evaluate your answer.\n" +
-                error.message
+                "Unable to evaluate your answer right now. Please try again."
             );
 
         } finally {
@@ -750,9 +793,9 @@ export default function MockInterview() {
 
     const nextQuestion = async () => {
 
-        // ---------------------------------------------
+        // =================================================
         // FINISH AFTER QUESTION 5
-        // ---------------------------------------------
+        // =================================================
 
         if (questionNumber >= 5) {
 
@@ -787,30 +830,31 @@ export default function MockInterview() {
                 questionNumber + 1;
 
 
-            const response = await fetch(
-                `${API_URL}/api/ai/interview/question`,
-                {
-                    method: "POST",
+            const response =
+                await fetch(
+                    `${API_URL}/api/ai/interview/question`,
+                    {
+                        method: "POST",
 
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
 
-                    body: JSON.stringify({
+                        body: JSON.stringify({
 
-                        role: role,
+                            role: role,
 
-                        type: type,
+                            type: type,
 
-                        difficulty: difficulty,
+                            difficulty: difficulty,
 
-                        questionNumber:
-                            nextNumber
+                            questionNumber:
+                                nextNumber
 
-                    })
-                }
-            );
+                        })
+                    }
+                );
 
 
             console.log(
@@ -850,11 +894,9 @@ export default function MockInterview() {
                 data.question
             );
 
-
             setCategory(
                 data.category || type
             );
-
 
             setQuestionNumber(
                 nextNumber
@@ -892,7 +934,9 @@ export default function MockInterview() {
 
             // Stop speech recognition
 
-            if (recognitionRef.current) {
+            if (
+                recognitionRef.current
+            ) {
 
                 try {
 
@@ -921,20 +965,9 @@ export default function MockInterview() {
 
             }
 
-
-            // Release audio URL
-
-            if (audioURL) {
-
-                URL.revokeObjectURL(
-                    audioURL
-                );
-
-            }
-
         };
 
-    }, [audioURL]);
+    }, []);
 
 
     // =========================================================
@@ -943,11 +976,14 @@ export default function MockInterview() {
 
     const calculateAverage = (field) => {
 
-        if (evaluations.length === 0) {
+        if (
+            evaluations.length === 0
+        ) {
 
             return 0;
 
         }
+
 
         const total =
             evaluations.reduce(
@@ -956,6 +992,7 @@ export default function MockInterview() {
                     (Number(item[field]) || 0),
                 0
             );
+
 
         return Math.round(
             total / evaluations.length
@@ -979,29 +1016,34 @@ export default function MockInterview() {
         );
 
 
-    const getPerformanceLabel = (score) => {
+    // =========================================================
+    // PERFORMANCE LABEL
+    // =========================================================
 
-        if (score >= 85) {
+    const getPerformanceLabel =
+        (score) => {
 
-            return "Excellent";
+            if (score >= 85) {
 
-        }
+                return "Excellent";
 
-        if (score >= 70) {
+            }
 
-            return "Good";
+            if (score >= 70) {
 
-        }
+                return "Good";
 
-        if (score >= 50) {
+            }
 
-            return "Needs Improvement";
+            if (score >= 50) {
 
-        }
+                return "Needs Improvement";
 
-        return "Keep Practicing";
+            }
 
-    };
+            return "Keep Practicing";
+
+        };
 
 
     // =========================================================
@@ -1014,12 +1056,13 @@ export default function MockInterview() {
 
 
             {/* =================================================
-                FINAL RESULTS SCREEN
+                FINAL RESULTS
             ================================================= */}
 
             {showResults ? (
 
                 <div className="interview-results">
+
 
                     <div className="results-header">
 
@@ -1077,6 +1120,7 @@ export default function MockInterview() {
                     {/* SCORE GRID */}
 
                     <div className="result-score-grid">
+
 
                         <div className="result-score-card">
 
@@ -1141,7 +1185,7 @@ export default function MockInterview() {
                     </div>
 
 
-                    {/* START NEW INTERVIEW */}
+                    {/* NEW INTERVIEW */}
 
                     <button
                         className="start-interview-button"
@@ -1185,6 +1229,7 @@ export default function MockInterview() {
                 ================================================= */
 
                 <div className="interview-setup">
+
 
                     <div className="interview-header">
 
@@ -1505,9 +1550,7 @@ export default function MockInterview() {
                         )}
 
 
-                        {/* =================================================
-                            LIVE TRANSCRIPT
-                        ================================================= */}
+                        {/* LIVE TRANSCRIPT */}
 
                         {isRecording && (
 
@@ -1539,9 +1582,7 @@ export default function MockInterview() {
                         )}
 
 
-                        {/* =================================================
-                            RECORDED ANSWER
-                        ================================================= */}
+                        {/* RECORDED ANSWER */}
 
                         {audioURL && (
 
@@ -1559,9 +1600,7 @@ export default function MockInterview() {
                                 />
 
 
-                                {/* =================================================
-                                    TRANSCRIBED ANSWER
-                                ================================================= */}
+                                {/* TRANSCRIBED ANSWER */}
 
                                 <div className="transcribed-answer">
 
@@ -1590,9 +1629,7 @@ export default function MockInterview() {
                                 </div>
 
 
-                                {/* =================================================
-                                    SUBMIT ANSWER
-                                ================================================= */}
+                                {/* SUBMIT */}
 
                                 {!evaluation && (
 
@@ -1624,9 +1661,7 @@ export default function MockInterview() {
                         )}
 
 
-                        {/* =================================================
-                            AI EVALUATION
-                        ================================================= */}
+                        {/* AI EVALUATION */}
 
                         {evaluation && (
 
