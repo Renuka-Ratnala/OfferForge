@@ -648,59 +648,50 @@ export default function MockInterview() {
     const nextQuestion = async () => {
 
         if (questionNumber >= 5) {
-
             setShowResults(true);
-
             return;
-
         }
-
 
         setLoading(true);
 
         setEvaluation(null);
-
         setTranscript("");
-
         setInterimTranscript("");
-
         setAudioURL("");
 
         transcriptRef.current = "";
 
-
         try {
 
-            const nextNumber =
-                questionNumber + 1;
+            const nextNumber = questionNumber + 1;
 
+            console.log(
+                "Generating question:",
+                nextNumber
+            );
 
-            const response =
-                await fetch(
-                    `${API_URL}/api/ai/interview/question`,
-                    {
-                        method: "POST",
+            const response = await fetch(
+                `${API_URL}/api/ai/interview/question`,
+                {
+                    method: "POST",
 
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
 
-                        body: JSON.stringify({
+                    body: JSON.stringify({
+                        role: role,
+                        type: type,
+                        difficulty: difficulty,
+                        questionNumber: nextNumber
+                    })
+                }
+            );
 
-                            role: role,
-
-                            type: type,
-
-                            difficulty: difficulty,
-
-                            questionNumber:
-                                nextNumber
-
-                        })
-                    }
-                );
-
+            console.log(
+                "Next question status:",
+                response.status
+            );
 
             if (!response.ok) {
 
@@ -715,13 +706,15 @@ export default function MockInterview() {
                 throw new Error(
                     `Server error: ${response.status}`
                 );
-
             }
-
 
             const data =
                 await response.json();
 
+            console.log(
+                "Next question response:",
+                data
+            );
 
             setQuestion(
                 data.question
@@ -734,7 +727,6 @@ export default function MockInterview() {
             setQuestionNumber(
                 nextNumber
             );
-
 
         } catch (error) {
 
@@ -753,8 +745,10 @@ export default function MockInterview() {
             setLoading(false);
 
         }
-
     };
+
+
+
 
 
     useEffect(() => {
