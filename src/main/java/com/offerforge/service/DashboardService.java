@@ -7,7 +7,6 @@ import com.offerforge.dto.ProfileResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,6 +59,7 @@ public class DashboardService {
                     if (job.getMatchScore() >= 60) {
                         jobMatches++;
                     }
+
                 }
 
             } catch (Exception e) {
@@ -176,6 +176,7 @@ public class DashboardService {
                 new ArrayList<>();
 
         if (resumeUploaded) {
+
             activities.add(
                     "Resume uploaded and analyzed"
             );
@@ -184,7 +185,9 @@ public class DashboardService {
                     "Current ATS score: "
                             + atsScore + "%"
             );
+
         } else {
+
             activities.add(
                     "Upload your resume to begin analysis"
             );
@@ -196,7 +199,7 @@ public class DashboardService {
         );
 
         activities.add(
-                "Profile completion: "
+                "Profile completeness: "
                         + profileCompletion + "%"
         );
 
