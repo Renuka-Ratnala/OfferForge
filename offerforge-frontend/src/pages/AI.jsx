@@ -108,7 +108,7 @@ export default function AI() {
                 ]
             );
 
-        }  } catch (error) {
+         } catch (error) {
 
                console.error(
                    "AI Coach error:",
