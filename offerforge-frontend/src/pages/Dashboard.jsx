@@ -11,21 +11,14 @@ export default function Dashboard() {
 
     const navigate = useNavigate();
 
-    const [dashboard, setDashboard] =
-        useState(null);
-
-    const [loading, setLoading] =
-        useState(true);
-
-    const [error, setError] =
-        useState("");
+    const [dashboard, setDashboard] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [search, setSearch] = useState("");
 
     useEffect(() => {
-
         fetchDashboard();
-
     }, []);
-
 
     const fetchDashboard = async () => {
 
@@ -34,28 +27,17 @@ export default function Dashboard() {
             setLoading(true);
             setError("");
 
-            const response =
-                await api.get("/dashboard");
+            const response = await api.get("/dashboard");
 
-            console.log(
-                "Dashboard data:",
-                response.data
-            );
+            console.log("Dashboard data:", response.data);
 
-            setDashboard(
-                response.data
-            );
+            setDashboard(response.data);
 
         } catch (err) {
 
-            console.error(
-                "Dashboard error:",
-                err
-            );
+            console.error("Dashboard error:", err);
 
-            setError(
-                "Unable to load dashboard data."
-            );
+            setError("Unable to load dashboard data.");
 
         } finally {
 
@@ -64,11 +46,70 @@ export default function Dashboard() {
         }
     };
 
+    const profile = dashboard?.profile;
+
+    const fullName =
+        profile?.fullName?.trim() || "Candidate";
+
+    const initials = fullName
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((name) => name[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
+
+    const handleSearch = (e) => {
+
+        const value = e.target.value;
+
+        setSearch(value);
+
+        const query = value.trim().toLowerCase();
+
+        if (!query) {
+            return;
+        }
+
+        const routes = [
+            {
+                keywords: ["resume", "cv", "ats"],
+                path: "/resume"
+            },
+            {
+                keywords: ["job", "jobs", "career", "opportunity"],
+                path: "/jobs"
+            },
+            {
+                keywords: ["profile", "account", "personal"],
+                path: "/profile"
+            },
+            {
+                keywords: ["ai", "coach", "career coach"],
+                path: "/ai"
+            },
+            {
+                keywords: ["interview", "mock", "practice"],
+                path: "/mock-interview"
+            }
+        ];
+
+        const matchedRoute = routes.find((route) =>
+            route.keywords.some((keyword) =>
+                keyword.includes(query) ||
+                query.includes(keyword)
+            )
+        );
+
+        if (matchedRoute) {
+            navigate(matchedRoute.path);
+            setSearch("");
+        }
+    };
 
     if (loading) {
 
         return (
-
             <div className="dashboard-page">
 
                 <div className="dashboard-loading">
@@ -88,16 +129,13 @@ export default function Dashboard() {
                 </div>
 
             </div>
-
         );
 
     }
 
-
     if (error) {
 
         return (
-
             <div className="dashboard-page">
 
                 <div className="dashboard-error">
@@ -114,22 +152,16 @@ export default function Dashboard() {
                         {error}
                     </p>
 
-                    <button
-                        onClick={
-                            fetchDashboard
-                        }
-                    >
+                    <button onClick={fetchDashboard}>
                         Try Again
                     </button>
 
                 </div>
 
             </div>
-
         );
 
     }
-
 
     const stats = {
 
@@ -147,31 +179,27 @@ export default function Dashboard() {
 
     };
 
-
     const activities =
         dashboard?.recentActivities || [];
 
     const aiTips =
         dashboard?.aiTips || [];
 
-
     return (
 
         <div className="dashboard-page">
 
-            {/* =================================================
-                HEADER
-            ================================================= */}
-
             <div className="dashboard-header">
 
-                <div>
+                <div className="dashboard-welcome">
+
+                    <span className="dashboard-eyebrow">
+                        OFFERFORGE DASHBOARD
+                    </span>
 
                     <h1>
                         Welcome back,{" "}
-                        <span>
-                            Candidate
-                        </span>
+                        <span>{fullName}</span>
                     </h1>
 
                     <p>
@@ -179,7 +207,6 @@ export default function Dashboard() {
                     </p>
 
                 </div>
-
 
                 <div className="dashboard-header-actions">
 
@@ -191,11 +218,12 @@ export default function Dashboard() {
 
                         <input
                             type="text"
-                            placeholder="Search..."
+                            placeholder="Search dashboard..."
+                            value={search}
+                            onChange={handleSearch}
                         />
 
                     </div>
-
 
                     <div className="notification">
 
@@ -205,67 +233,73 @@ export default function Dashboard() {
 
                     </div>
 
-
-                    <div className="profile-avatar">
-
-                        C
-
-                    </div>
+                    <button
+                        className="profile-avatar"
+                        onClick={() => navigate("/profile")}
+                        title="Open profile"
+                    >
+                        {initials}
+                    </button>
 
                 </div>
 
             </div>
 
-
-            {/* =================================================
-                STATS
-            ================================================= */}
-
-            <DashboardStats
-                stats={stats}
-            />
-
-
-            {/* =================================================
-                MAIN GRID
-            ================================================= */}
+            <DashboardStats stats={stats} />
 
             <div className="dashboard-main-grid">
 
-
-                {/* CAREER PROGRESS */}
-
-                <div className="dashboard-card">
+                <div className="dashboard-card career-progress-card">
 
                     <div className="card-header">
 
-                        <h2>
-                            📈 Career Progress
-                        </h2>
+                        <div>
 
-                        <select defaultValue="Current">
+                            <h2>
+                                📈 Career Progress
+                            </h2>
 
-                            <option>
-                                Current
-                            </option>
-
-                        </select>
-
-                    </div>
-
-
-                    <div className="career-progress-content">
-
-                        <div className="progress-big-number">
-
-                            {stats.profileCompletion}%
+                            <p className="card-subtitle">
+                                Your current OfferForge profile health
+                            </p>
 
                         </div>
 
-                        <p>
-                            Profile completion
-                        </p>
+                        <span className="progress-badge">
+                            {stats.profileCompletion}%
+                        </span>
 
+                    </div>
+
+                    <div className="career-progress-content">
+
+                        <div className="progress-score-row">
+
+                            <div>
+
+                                <div className="progress-big-number">
+                                    {stats.profileCompletion}%
+                                </div>
+
+                                <p>
+                                    Profile completion
+                                </p>
+
+                            </div>
+
+                            <div className="progress-ring">
+                                <div
+                                    className="progress-ring-value"
+                                    style={{
+                                        "--progress":
+                                            `${stats.profileCompletion * 3.6}deg`
+                                    }}
+                                >
+                                    {stats.profileCompletion}%
+                                </div>
+                            </div>
+
+                        </div>
 
                         <div className="dashboard-progress-bar">
 
@@ -279,31 +313,30 @@ export default function Dashboard() {
 
                         </div>
 
-
                         <div className="career-progress-details">
 
-                            <span>
-                                Resume
+                            <div>
+                                <span>Resume</span>
                                 <strong>
                                     {stats.resumeUploaded
-                                        ? " Uploaded"
-                                        : " Pending"}
+                                        ? "Uploaded"
+                                        : "Pending"}
                                 </strong>
-                            </span>
+                            </div>
 
-                            <span>
-                                ATS Score
+                            <div>
+                                <span>ATS Score</span>
                                 <strong>
                                     {stats.atsScore}%
                                 </strong>
-                            </span>
+                            </div>
 
-                            <span>
-                                Job Matches
+                            <div>
+                                <span>Job Matches</span>
                                 <strong>
                                     {stats.jobMatches}
                                 </strong>
-                            </span>
+                            </div>
 
                         </div>
 
@@ -311,19 +344,23 @@ export default function Dashboard() {
 
                 </div>
 
-
-                {/* QUICK ACTIONS */}
-
                 <div className="dashboard-card">
 
                     <div className="card-header">
 
-                        <h2>
-                            ⚡ Quick Actions
-                        </h2>
+                        <div>
+
+                            <h2>
+                                ⚡ Quick Actions
+                            </h2>
+
+                            <p className="card-subtitle">
+                                Jump straight into your preparation
+                            </p>
+
+                        </div>
 
                     </div>
-
 
                     <div className="quick-actions">
 
@@ -361,23 +398,29 @@ export default function Dashboard() {
 
             </div>
 
-
-            {/* =================================================
-                AI COACH
-            ================================================= */}
-
             <div className="bottom-grid">
 
                 <div className="dashboard-card ai-tip-card">
 
                     <div className="card-header">
 
-                        <h2>
-                            🤖 AI Career Coach
-                        </h2>
+                        <div>
+
+                            <h2>
+                                🤖 AI Career Coach
+                            </h2>
+
+                            <p className="card-subtitle">
+                                Personalized suggestions based on your profile
+                            </p>
+
+                        </div>
+
+                        <span className="ai-status">
+                            AI ACTIVE
+                        </span>
 
                     </div>
-
 
                     {aiTips.length > 0 ? (
 
@@ -387,122 +430,89 @@ export default function Dashboard() {
                                 "
                             </div>
 
-
                             <p className="tip">
-
                                 {aiTips[0]}
-
                             </p>
-
 
                             {aiTips
                                 .slice(1)
-                                .map(
-                                    (
-                                        tip,
-                                        index
-                                    ) => (
+                                .map((tip, index) => (
 
-                                        <div
-                                            className="example positive"
-                                            key={
-                                                index
-                                            }
-                                        >
+                                    <div
+                                        className="example positive"
+                                        key={index}
+                                    >
+                                        💡 {tip}
+                                    </div>
 
-                                            💡{" "}
-                                            {tip}
-
-                                        </div>
-
-                                    )
-                                )}
+                                ))}
 
                         </>
 
                     ) : (
 
                         <p className="tip">
-
-                            Complete your profile and
-                            upload your resume to receive
-                            personalized career guidance.
-
+                            Complete your profile and upload your
+                            resume to receive personalized career guidance.
                         </p>
 
                     )}
 
-
                     <button
                         className="tips-button"
-                        onClick={() =>
-                            navigate(
-                                "/ai-coach"
-                            )
-                        }
+                        onClick={() => navigate("/ai")}
                     >
-
                         Open AI Career Coach →
-
                     </button>
 
                 </div>
-
-
-                {/* =================================================
-                    RECENT ACTIVITY
-                ================================================= */}
 
                 <div className="dashboard-card activity-card">
 
                     <div className="card-header">
 
-                        <h2>
-                            🕒 Recent Activity
-                        </h2>
+                        <div>
+
+                            <h2>
+                                🕒 Recent Activity
+                            </h2>
+
+                            <p className="card-subtitle">
+                                What's happening in your career journey
+                            </p>
+
+                        </div>
 
                     </div>
 
-
                     {activities.length > 0 ? (
 
-                        activities.map(
-                            (
-                                activity,
-                                index
-                            ) => (
+                        activities.map((activity, index) => (
 
-                                <div
-                                    className="activity-item"
-                                    key={
-                                        index
-                                    }
-                                >
+                            <div
+                                className="activity-item"
+                                key={index}
+                            >
 
-                                    <div className="activity-icon">
+                                <div className="activity-icon">
+                                    ✓
+                                </div>
 
-                                        ✓
+                                <div>
 
-                                    </div>
+                                    <h3>
+                                        {activity}
+                                    </h3>
 
-
-                                    <div>
-
-                                        <h3>
-                                            {activity}
-                                        </h3>
-
-                                        <p>
-                                            From your latest
-                                            OfferForge data
-                                        </p>
-
-                                    </div>
+                                    <p>
+                                        Updated from your OfferForge data
+                                    </p>
 
                                 </div>
 
-                            )
-                        )
+                            </div>
+
+                        ))
 
                     ) : (
 
@@ -519,8 +529,7 @@ export default function Dashboard() {
                                 </h3>
 
                                 <p>
-                                    Start using OfferForge
-                                    to see your activity here.
+                                    Start using OfferForge to see activity here.
                                 </p>
 
                             </div>

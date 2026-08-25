@@ -83,6 +83,8 @@ public class DashboardService {
 
         response.setProfileCompletion(profileCompletion);
 
+        response.setProfile(profile);
+
         response.setRecentActivities(
                 buildRecentActivities(
                         resumeUploaded,
