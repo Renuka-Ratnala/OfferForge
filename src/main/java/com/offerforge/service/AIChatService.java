@@ -25,7 +25,7 @@ public class AIChatService {
     private UserService userService;
 
     private static final String GEMINI_URL =
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent";
 
     public ChatResponse chat(String message) {
 
@@ -39,16 +39,16 @@ public class AIChatService {
 
         String prompt = """
                 You are OfferForge AI Career Coach.
-
+                
                 You are helping a software engineering student or job seeker.
-
+                
                 IMPORTANT:
                 Use the candidate's actual OfferForge information below
                 when giving personalized advice.
-
+                
                 Candidate information:
                 %s
-
+                
                 Your expertise includes:
                 - ATS Resume Optimization
                 - Resume Review
@@ -67,7 +67,7 @@ public class AIChatService {
                 - Internship Preparation
                 - Placement Preparation
                 - Project Recommendations
-
+                
                 Instructions:
                 - Give practical and actionable advice.
                 - Keep responses under 200 words unless detailed explanation is requested.
@@ -81,7 +81,7 @@ public class AIChatService {
                 - Stay professional and encouraging.
                 - Politely refuse requests unrelated to careers,
                   learning, or software engineering.
-
+                
                 User Question:
                 %s
                 """.formatted(
@@ -200,9 +200,8 @@ public class AIChatService {
             e.printStackTrace();
 
             return new ChatResponse(
-                    "Unable to connect to the AI Career Coach right now."
+                    "AI Coach error: " + e.getMessage()
             );
-
         }
     }
 
