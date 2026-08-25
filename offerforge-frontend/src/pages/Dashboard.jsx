@@ -352,7 +352,7 @@ export default function Dashboard() {
                             title="AI Career Coach"
                             description="Get personalized guidance"
                             icon="🤖"
-                            path="/ai-coach"
+                            path="/ai"
                         />
 
                     </div>

@@ -108,25 +108,31 @@ export default function AI() {
                 ]
             );
 
-        } catch (error) {
+        }  } catch (error) {
 
-            console.error(
-                "AI Coach error:",
-                error
-            );
+               console.error(
+                   "AI Coach error:",
+                   error
+               );
 
-            setMessages(
-                previous => [
-                    ...previous,
-                    {
-                        role: "ai",
-                        text:
-                            "I couldn't connect to the AI Career Coach right now. Please try again."
-                    }
-                ]
-            );
+               console.error(
+                   "AI Coach response:",
+                   error.response?.data
+               );
 
-        } finally {
+               setMessages(
+                   previous => [
+                       ...previous,
+                       {
+                           role: "ai",
+                           text:
+                               error.response?.data?.message ||
+                               "I couldn't connect to the AI Career Coach right now. Please try again."
+                       }
+                   ]
+               );
+
+           }finally {
 
             setLoading(false);
 
