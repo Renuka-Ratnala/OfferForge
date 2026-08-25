@@ -1,540 +1,540 @@
 import { useEffect, useState } from "react";
-import { FaFileAlt, FaChartLine, FaBriefcase, FaUser, FaRobot, FaArrowRight, FaCheckCircle } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import api from "../api/api";
+
+import DashboardStats from "../components/DashboardStats";
+import QuickActionCard from "../components/QuickActionCard";
+
 import "./Dashboard.css";
 
 export default function Dashboard() {
 
-    const [dashboard, setDashboard] = useState(null);
+    const navigate = useNavigate();
+
+    const [dashboard, setDashboard] =
+        useState(null);
+
+    const [loading, setLoading] =
+        useState(true);
+
+    const [error, setError] =
+        useState("");
 
     useEffect(() => {
+
         fetchDashboard();
+
     }, []);
 
+
     const fetchDashboard = async () => {
+
         try {
-            const response = await api.get("/dashboard");
-            console.log(response.data);
-            setDashboard(response.data);
+
+            setLoading(true);
+            setError("");
+
+            const response =
+                await api.get("/dashboard");
+
+            console.log(
+                "Dashboard data:",
+                response.data
+            );
+
+            setDashboard(
+                response.data
+            );
+
         } catch (err) {
-            console.log("Dashboard API error:", err);
+
+            console.error(
+                "Dashboard error:",
+                err
+            );
+
+            setError(
+                "Unable to load dashboard data."
+            );
+
+        } finally {
+
+            setLoading(false);
+
         }
     };
 
-    const stats = {
-        resumeUploaded: dashboard?.resumeUploaded ?? true,
-        atsScore: dashboard?.atsScore ?? 85,
-        jobMatches: dashboard?.jobMatches ?? 24,
-        profileCompletion: dashboard?.profileCompletion ?? 68
-    };
 
-    return (
-        <div className="dashboard-page">
+    if (loading) {
 
-            {/* Header */}
-            <div className="dashboard-header">
+        return (
 
-                <div>
-                    <h1>
-                        Welcome back, <span>Renuka!</span> 👋
-                    </h1>
+            <div className="dashboard-page">
 
-                    <p>
-                        Let's build your dream career together.
-                    </p>
-                </div>
+                <div className="dashboard-loading">
 
-                <div className="dashboard-header-actions">
-
-                    <div className="search-box">
-                        <span>⌕</span>
-                        <input
-                            type="text"
-                            placeholder="Search jobs, skills..."
-                        />
+                    <div className="loading-spinner">
+                        ⟳
                     </div>
-
-                    <div className="notification">
-                        🔔
-                        <span></span>
-                    </div>
-
-                    <div className="profile-avatar">
-                        R
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            {/* Top Statistics */}
-            <div className="stats-grid">
-
-                <div className="stat-card green">
-
-                    <div className="stat-icon">
-                        <FaFileAlt />
-                    </div>
-
-                    <div className="stat-content">
-                        <p>Resume Status</p>
-
-                        <h2>
-                            {stats.resumeUploaded ? "Good" : "Pending"}
-                        </h2>
-
-                        <span>
-                            {stats.resumeUploaded
-                                ? "Keep improving!"
-                                : "Upload your resume"}
-                        </span>
-                    </div>
-
-                    <div className="progress-wrapper">
-                        <div className="progress-bar">
-                            <div
-                                className="progress-fill"
-                                style={{
-                                    width: stats.resumeUploaded ? "72%" : "25%"
-                                }}
-                            ></div>
-                        </div>
-
-                        <small>
-                            {stats.resumeUploaded ? "72%" : "25%"}
-                        </small>
-                    </div>
-
-                </div>
-
-
-                <div className="stat-card blue">
-
-                    <div className="stat-icon">
-                        <FaChartLine />
-                    </div>
-
-                    <div className="stat-content">
-                        <p>ATS Score</p>
-
-                        <h2>{stats.atsScore}%</h2>
-
-                        <span>Great Score!</span>
-                    </div>
-
-                    <div className="progress-wrapper">
-                        <div className="progress-bar">
-                            <div
-                                className="progress-fill"
-                                style={{
-                                    width: `${stats.atsScore}%`
-                                }}
-                            ></div>
-                        </div>
-
-                        <small>{stats.atsScore}%</small>
-                    </div>
-
-                </div>
-
-
-                <div className="stat-card purple">
-
-                    <div className="stat-icon">
-                        <FaBriefcase />
-                    </div>
-
-                    <div className="stat-content">
-                        <p>Jobs Matched</p>
-
-                        <h2>{stats.jobMatches}</h2>
-
-                        <span>High match jobs</span>
-                    </div>
-
-                </div>
-
-
-                <div className="stat-card yellow">
-
-                    <div className="stat-icon">
-                        <FaUser />
-                    </div>
-
-                    <div className="stat-content">
-                        <p>Profile Strength</p>
-
-                        <h2>{stats.profileCompletion}%</h2>
-
-                        <span>Complete your profile</span>
-                    </div>
-
-                    <div className="progress-wrapper">
-                        <div className="progress-bar">
-                            <div
-                                className="progress-fill"
-                                style={{
-                                    width: `${stats.profileCompletion}%`
-                                }}
-                            ></div>
-                        </div>
-
-                        <small>{stats.profileCompletion}%</small>
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            {/* Main Dashboard Grid */}
-            <div className="dashboard-main-grid">
-
-                {/* Career Progress */}
-                <div className="dashboard-card career-card">
-
-                    <div className="card-header">
-                        <div>
-                            <h2>
-                                <FaChartLine />
-                                Career Progress
-                            </h2>
-                        </div>
-
-                        <select>
-                            <option>This Month</option>
-                            <option>This Year</option>
-                        </select>
-                    </div>
-
-                    <div className="chart">
-
-                        <div className="chart-grid">
-                            <span>100</span>
-                            <span>75</span>
-                            <span>50</span>
-                            <span>25</span>
-                            <span>0</span>
-                        </div>
-
-                        <svg
-                            viewBox="0 0 700 260"
-                            className="progress-chart"
-                        >
-
-                            <defs>
-                                <linearGradient
-                                    id="chartGradient"
-                                    x1="0"
-                                    y1="0"
-                                    x2="0"
-                                    y2="1"
-                                >
-                                    <stop
-                                        offset="0%"
-                                        stopColor="#8B5CF6"
-                                        stopOpacity="0.35"
-                                    />
-
-                                    <stop
-                                        offset="100%"
-                                        stopColor="#8B5CF6"
-                                        stopOpacity="0"
-                                    />
-                                </linearGradient>
-                            </defs>
-
-                            <path
-                                d="M20 210
-                                   C100 180, 140 170, 210 145
-                                   C280 125, 330 145, 400 110
-                                   C470 75, 520 80, 680 30
-                                   L680 250
-                                   L20 250 Z"
-                                fill="url(#chartGradient)"
-                            />
-
-                            <path
-                                d="M20 210
-                                   C100 180, 140 170, 210 145
-                                   C280 125, 330 145, 400 110
-                                   C470 75, 520 80, 680 30"
-                                fill="none"
-                                stroke="#8B5CF6"
-                                strokeWidth="4"
-                            />
-
-                            <circle cx="20" cy="210" r="5" fill="#fff" />
-                            <circle cx="210" cy="145" r="5" fill="#fff" />
-                            <circle cx="400" cy="110" r="5" fill="#fff" />
-                            <circle cx="680" cy="30" r="5" fill="#fff" />
-
-                        </svg>
-
-                        <div className="chart-labels">
-                            <span>Week 1</span>
-                            <span>Week 2</span>
-                            <span>Week 3</span>
-                            <span>Week 4</span>
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                {/* Quick Actions */}
-                <div className="dashboard-card">
-
-                    <div className="card-header">
-                        <h2>
-                            <span className="purple-icon">⚡</span>
-                            Quick Actions
-                        </h2>
-                    </div>
-
-                    <div className="quick-actions">
-
-                        <div className="quick-action">
-                            <div className="action-icon purple-bg">
-                                <FaFileAlt />
-                            </div>
-
-                            <div>
-                                <h3>Upload New Resume</h3>
-                                <p>Get AI-powered analysis</p>
-                            </div>
-
-                            <FaArrowRight />
-                        </div>
-
-
-                        <div className="quick-action">
-                            <div className="action-icon blue-bg">
-                                <FaBriefcase />
-                            </div>
-
-                            <div>
-                                <h3>Explore Jobs</h3>
-                                <p>Find jobs that match you</p>
-                            </div>
-
-                            <FaArrowRight />
-                        </div>
-
-
-                        <div className="quick-action">
-                            <div className="action-icon green-bg">
-                                <FaRobot />
-                            </div>
-
-                            <div>
-                                <h3>Chat with AI Coach</h3>
-                                <p>Get personalized guidance</p>
-                            </div>
-
-                            <FaArrowRight />
-                        </div>
-
-
-                        <div className="quick-action">
-                            <div className="action-icon yellow-bg">
-                                <FaUser />
-                            </div>
-
-                            <div>
-                                <h3>Update Profile</h3>
-                                <p>Improve your visibility</p>
-                            </div>
-
-                            <FaArrowRight />
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            {/* Bottom Section */}
-            <div className="bottom-grid">
-
-                {/* Featured Opportunities */}
-                <div className="dashboard-card featured-card">
-
-                    <div className="card-header">
-
-                        <h2>
-                            💼 Featured Opportunities
-                        </h2>
-
-                        <button>
-                            View All Jobs →
-                        </button>
-
-                    </div>
-
-                    <div className="companies">
-
-                        <Company
-                            name="Google"
-                            role="Software Engineer"
-                            location="Bangalore"
-                            match="95% Match"
-                            logo="G"
-                        />
-
-                        <Company
-                            name="Microsoft"
-                            role="Backend Developer"
-                            location="Hyderabad"
-                            match="90% Match"
-                            logo="M"
-                        />
-
-                        <Company
-                            name="Amazon"
-                            role="SDE Intern"
-                            location="Bangalore"
-                            match="88% Match"
-                            logo="a"
-                        />
-
-                        <Company
-                            name="Adobe"
-                            role="Frontend Developer"
-                            location="Noida"
-                            match="85% Match"
-                            logo="A"
-                        />
-
-                        <Company
-                            name="Oracle"
-                            role="Java Developer"
-                            location="Bangalore"
-                            match="82% Match"
-                            logo="O"
-                        />
-
-                    </div>
-
-                </div>
-
-
-                {/* AI Coach */}
-                <div className="dashboard-card ai-tip-card">
 
                     <h2>
-                        <FaRobot />
-                        AI Coach Tip
+                        Loading your dashboard...
                     </h2>
 
-                    <div className="quote">
-                        “
-                    </div>
-
-                    <p className="tip">
-                        Add quantifiable achievements in your resume to stand out!
+                    <p>
+                        Fetching your latest career data.
                     </p>
 
-                    <p className="example-title">
-                        For example:
+                </div>
+
+            </div>
+
+        );
+
+    }
+
+
+    if (error) {
+
+        return (
+
+            <div className="dashboard-page">
+
+                <div className="dashboard-error">
+
+                    <div className="error-icon">
+                        ⚠️
+                    </div>
+
+                    <h2>
+                        Something went wrong
+                    </h2>
+
+                    <p>
+                        {error}
                     </p>
 
-                    <div className="example positive">
-                        <FaCheckCircle />
-                        Increased efficiency by 30%
-                    </div>
-
-                    <div className="example negative">
-                        ✕ Responsible for task management
-                    </div>
-
-                    <button className="tips-button">
-                        Get More Tips →
+                    <button
+                        onClick={
+                            fetchDashboard
+                        }
+                    >
+                        Try Again
                     </button>
 
                 </div>
 
             </div>
 
+        );
 
-            {/* Recent Activity */}
-            <div className="dashboard-card activity-card">
-
-                <h2>▣ Recent Activity</h2>
-
-                <Activity
-                    icon="✓"
-                    text="Resume analyzed"
-                    time="2 hours ago"
-                />
-
-                <Activity
-                    icon="💼"
-                    text="New job matches found"
-                    time="5 hours ago"
-                />
-
-                <Activity
-                    icon="🤖"
-                    text="AI Coach session"
-                    time="Yesterday"
-                />
-
-                <Activity
-                    icon="👤"
-                    text="Profile updated"
-                    time="2 days ago"
-                />
-
-            </div>
-
-        </div>
-    );
-}
+    }
 
 
-function Company({ name, role, location, match, logo }) {
+    const stats = {
+
+        resumeUploaded:
+            dashboard?.resumeUploaded ?? false,
+
+        atsScore:
+            dashboard?.atsScore ?? 0,
+
+        jobMatches:
+            dashboard?.jobMatches ?? 0,
+
+        profileCompletion:
+            dashboard?.profileCompletion ?? 0
+
+    };
+
+
+    const activities =
+        dashboard?.recentActivities || [];
+
+    const aiTips =
+        dashboard?.aiTips || [];
+
 
     return (
-        <div className="company-card">
 
-            <div className="company-logo">
-                {logo}
+        <div className="dashboard-page">
+
+            {/* =================================================
+                HEADER
+            ================================================= */}
+
+            <div className="dashboard-header">
+
+                <div>
+
+                    <h1>
+                        Welcome back,{" "}
+                        <span>
+                            Candidate
+                        </span>
+                    </h1>
+
+                    <p>
+                        Here's your career progress at a glance.
+                    </p>
+
+                </div>
+
+
+                <div className="dashboard-header-actions">
+
+                    <div className="search-box">
+
+                        <span>
+                            🔍
+                        </span>
+
+                        <input
+                            type="text"
+                            placeholder="Search..."
+                        />
+
+                    </div>
+
+
+                    <div className="notification">
+
+                        🔔
+
+                        <span />
+
+                    </div>
+
+
+                    <div className="profile-avatar">
+
+                        C
+
+                    </div>
+
+                </div>
+
             </div>
 
-            <h3>{name}</h3>
 
-            <p>{role}</p>
+            {/* =================================================
+                STATS
+            ================================================= */}
 
-            <span>⌖ {location}</span>
+            <DashboardStats
+                stats={stats}
+            />
 
-            <div className="match">
-                {match}
+
+            {/* =================================================
+                MAIN GRID
+            ================================================= */}
+
+            <div className="dashboard-main-grid">
+
+
+                {/* CAREER PROGRESS */}
+
+                <div className="dashboard-card">
+
+                    <div className="card-header">
+
+                        <h2>
+                            📈 Career Progress
+                        </h2>
+
+                        <select defaultValue="Current">
+
+                            <option>
+                                Current
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div className="career-progress-content">
+
+                        <div className="progress-big-number">
+
+                            {stats.profileCompletion}%
+
+                        </div>
+
+                        <p>
+                            Profile completion
+                        </p>
+
+
+                        <div className="dashboard-progress-bar">
+
+                            <div
+                                className="dashboard-progress-fill"
+                                style={{
+                                    width:
+                                        `${stats.profileCompletion}%`
+                                }}
+                            />
+
+                        </div>
+
+
+                        <div className="career-progress-details">
+
+                            <span>
+                                Resume
+                                <strong>
+                                    {stats.resumeUploaded
+                                        ? " Uploaded"
+                                        : " Pending"}
+                                </strong>
+                            </span>
+
+                            <span>
+                                ATS Score
+                                <strong>
+                                    {stats.atsScore}%
+                                </strong>
+                            </span>
+
+                            <span>
+                                Job Matches
+                                <strong>
+                                    {stats.jobMatches}
+                                </strong>
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                {/* QUICK ACTIONS */}
+
+                <div className="dashboard-card">
+
+                    <div className="card-header">
+
+                        <h2>
+                            ⚡ Quick Actions
+                        </h2>
+
+                    </div>
+
+
+                    <div className="quick-actions">
+
+                        <QuickActionCard
+                            title="Upload Resume"
+                            description="Improve your ATS score"
+                            icon="📄"
+                            path="/resume"
+                        />
+
+                        <QuickActionCard
+                            title="Find Jobs"
+                            description="Explore matching opportunities"
+                            icon="💼"
+                            path="/jobs"
+                        />
+
+                        <QuickActionCard
+                            title="Mock Interview"
+                            description="Practice with AI"
+                            icon="🎤"
+                            path="/mock-interview"
+                        />
+
+                        <QuickActionCard
+                            title="AI Career Coach"
+                            description="Get personalized guidance"
+                            icon="🤖"
+                            path="/ai-coach"
+                        />
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            {/* =================================================
+                AI COACH
+            ================================================= */}
+
+            <div className="bottom-grid">
+
+                <div className="dashboard-card ai-tip-card">
+
+                    <div className="card-header">
+
+                        <h2>
+                            🤖 AI Career Coach
+                        </h2>
+
+                    </div>
+
+
+                    {aiTips.length > 0 ? (
+
+                        <>
+
+                            <div className="quote">
+                                "
+                            </div>
+
+
+                            <p className="tip">
+
+                                {aiTips[0]}
+
+                            </p>
+
+
+                            {aiTips
+                                .slice(1)
+                                .map(
+                                    (
+                                        tip,
+                                        index
+                                    ) => (
+
+                                        <div
+                                            className="example positive"
+                                            key={
+                                                index
+                                            }
+                                        >
+
+                                            💡{" "}
+                                            {tip}
+
+                                        </div>
+
+                                    )
+                                )}
+
+                        </>
+
+                    ) : (
+
+                        <p className="tip">
+
+                            Complete your profile and
+                            upload your resume to receive
+                            personalized career guidance.
+
+                        </p>
+
+                    )}
+
+
+                    <button
+                        className="tips-button"
+                        onClick={() =>
+                            navigate(
+                                "/ai-coach"
+                            )
+                        }
+                    >
+
+                        Open AI Career Coach →
+
+                    </button>
+
+                </div>
+
+
+                {/* =================================================
+                    RECENT ACTIVITY
+                ================================================= */}
+
+                <div className="dashboard-card activity-card">
+
+                    <div className="card-header">
+
+                        <h2>
+                            🕒 Recent Activity
+                        </h2>
+
+                    </div>
+
+
+                    {activities.length > 0 ? (
+
+                        activities.map(
+                            (
+                                activity,
+                                index
+                            ) => (
+
+                                <div
+                                    className="activity-item"
+                                    key={
+                                        index
+                                    }
+                                >
+
+                                    <div className="activity-icon">
+
+                                        ✓
+
+                                    </div>
+
+
+                                    <div>
+
+                                        <h3>
+                                            {activity}
+                                        </h3>
+
+                                        <p>
+                                            From your latest
+                                            OfferForge data
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+                            )
+                        )
+
+                    ) : (
+
+                        <div className="activity-item">
+
+                            <div className="activity-icon">
+                                ℹ
+                            </div>
+
+                            <div>
+
+                                <h3>
+                                    No recent activity
+                                </h3>
+
+                                <p>
+                                    Start using OfferForge
+                                    to see your activity here.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    )}
+
+                </div>
+
             </div>
 
         </div>
+
     );
-}
 
-
-function Activity({ icon, text, time }) {
-
-    return (
-        <div className="activity-item">
-
-            <div className="activity-icon">
-                {icon}
-            </div>
-
-            <div>
-                <h3>{text}</h3>
-                <p>{time}</p>
-            </div>
-
-        </div>
-    );
 }
