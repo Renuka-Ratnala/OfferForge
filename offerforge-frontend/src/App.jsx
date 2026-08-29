@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+
 import MockInterview from "./pages/MockInterview";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -10,6 +11,7 @@ import Profile from "./pages/Profile";
 import AI from "./pages/AI";
 
 import MainLayout from "./layouts/MainLayout";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
 
@@ -17,29 +19,65 @@ export default function App() {
 
         <Routes>
 
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route
+                path="/"
+                element={
+                    <Navigate
+                        to="/login"
+                        replace
+                    />
+                }
+            />
 
-            <Route path="/login" element={<Login />} />
+            <Route
+                path="/login"
+                element={<Login />}
+            />
 
-            <Route path="/register" element={<Register />} />
+            <Route
+                path="/register"
+                element={<Register />}
+            />
 
-            <Route element={<MainLayout />}>
+            <Route element={<ProtectedRoute />}>
 
-                <Route path="/dashboard" element={<Dashboard />} />
+                <Route element={<MainLayout />}>
 
-                <Route path="/resume" element={<Resume />} />
+                    <Route
+                        path="/dashboard"
+                        element={<Dashboard />}
+                    />
 
-                <Route path="/jobs" element={<Jobs />} />
+                    <Route
+                        path="/resume"
+                        element={<Resume />}
+                    />
 
-                <Route path="/profile" element={<Profile />} />
+                    <Route
+                        path="/jobs"
+                        element={<Jobs />}
+                    />
 
-                <Route path="/ai" element={<AI />} />
-                <Route path="/mock-interview" element={<MockInterview />} />
+                    <Route
+                        path="/profile"
+                        element={<Profile />}
+                    />
+
+                    <Route
+                        path="/ai"
+                        element={<AI />}
+                    />
+
+                    <Route
+                        path="/mock-interview"
+                        element={<MockInterview />}
+                    />
+
+                </Route>
 
             </Route>
 
         </Routes>
 
     );
-
 }
