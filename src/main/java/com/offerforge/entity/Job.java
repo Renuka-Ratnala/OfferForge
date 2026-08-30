@@ -1,6 +1,13 @@
 package com.offerforge.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.Data;
 
 @Entity
@@ -23,8 +30,26 @@ public class Job {
 
     @Column(length = 1000)
     private String description;
+
     @Column(length = 1000)
     private String requiredSkills;
+
+    // ==============================
+    // External Job Information
+    // ==============================
+
+    @Column(length = 100)
+    private String externalId;
+
+    @Column(length = 100)
+    private String source;
+
+    @Column(length = 1000)
+    private String externalUrl;
+
+    // ==============================
+    // Company Relationship
+    // ==============================
 
     @ManyToOne
     @JoinColumn(name = "company_id")

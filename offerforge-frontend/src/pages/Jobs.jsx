@@ -8,6 +8,8 @@ export default function Jobs() {
 
     const [jobs, setJobs] = useState([]);
     const [search, setSearch] = useState("");
+    const [loading, setLoading] = useState(true);
+    const [aiError, setAiError] = useState(false);
 
     useEffect(() => {
         fetchJobs();
@@ -15,45 +17,143 @@ export default function Jobs() {
 
     const fetchJobs = async () => {
 
+        setLoading(true);
+        setAiError(false);
+
         try {
 
-            const response = await api.get("/users/recommendations");
+            /*
+             * NEW AI + RAG RECOMMENDATIONS
+             *
+             * Spring Boot:
+             * /api/ai/recommend
+             *
+             * ↓
+             *
+             * Python AI Service
+             *
+             * ↓
+             *
+             * LangGraph + RAG + Gemini
+             */
 
-            console.log("Recommended jobs:", response.data);
+            const response = await api.post(
+                "/ai/recommend",
+                {
+                    message:
+                        "Find the best jobs for my profile."
+                }
+            );
 
-            setJobs(response.data);
+            console.log(
+                "AI job recommendations:",
+                response.data
+            );
+
+            const recommendations =
+                response.data?.recommendations || [];
+
+            setJobs(recommendations);
 
         } catch (err) {
 
-            console.log("Jobs fetch error:", err);
+            console.error(
+                "AI job recommendation error:",
+                err
+            );
 
+            /*
+             * FALLBACK
+             *
+             * If AI service is unavailable,
+             * use the existing recommendation system.
+             */
+
+            try {
+
+                const fallbackResponse =
+                    await api.get(
+                        "/users/recommendations"
+                    );
+
+                console.log(
+                    "Fallback job recommendations:",
+                    fallbackResponse.data
+                );
+
+                setJobs(
+                    fallbackResponse.data || []
+                );
+
+                setAiError(true);
+
+            } catch (fallbackError) {
+
+                console.error(
+                    "Fallback job fetch error:",
+                    fallbackError
+                );
+
+                setJobs([]);
+                setAiError(true);
+            }
+
+        } finally {
+
+            setLoading(false);
         }
-
     };
+
+
+    /*
+     * SEARCH
+     *
+     * Search still happens on the frontend
+     * so users can quickly filter retrieved jobs.
+     */
 
     const filteredJobs = jobs.filter((job) => {
 
-        const title = job.jobTitle?.toLowerCase() || "";
-        const company = job.companyName?.toLowerCase() || "";
-        const location = job.location?.toLowerCase() || "";
+        const title =
+            job.jobTitle?.toLowerCase() || "";
 
-        const query = search.toLowerCase();
+        const company =
+            job.companyName?.toLowerCase() || "";
+
+        const location =
+            job.location?.toLowerCase() || "";
+
+        const query =
+            search.toLowerCase().trim();
 
         return (
             title.includes(query) ||
             company.includes(query) ||
             location.includes(query)
         );
-
     });
+
+
+    /*
+     * STATISTICS
+     */
 
     const bestMatch =
         jobs.length > 0
-            ? Math.max(...jobs.map((job) => job.matchScore || 0))
+            ? Math.max(
+                ...jobs.map(
+                    (job) => job.matchScore || 0
+                )
+            )
             : 0;
 
+
     const highMatchJobs =
-        jobs.filter((job) => (job.matchScore || 0) >= 80).length;
+        jobs.filter(
+            (job) =>
+                (job.matchScore || 0) >= 80
+        ).length;
+
 
     return (
 
@@ -66,16 +166,42 @@ export default function Jobs() {
                 <div>
 
                     <h1>
-                        Find Your Next Opportunity <span>💼</span>
+                        Find Your Next Opportunity
+                        <span>💼</span>
                     </h1>
 
                     <p>
-                        Discover internships and jobs that match your skills and career goals.
+                        AI-powered opportunities matched
+                        to your skills and career goals.
                     </p>
 
                 </div>
 
             </div>
+
+
+            {/* ================= AI STATUS ================= */}
+
+            {aiError && (
+
+                <div
+                    style={{
+                        marginBottom: "18px",
+                        padding: "12px 16px",
+                        borderRadius: "10px",
+                        background:
+                            "rgba(245, 158, 11, 0.10)",
+                        border:
+                            "1px solid rgba(245, 158, 11, 0.25)",
+                        color: "#fbbf24",
+                        fontSize: "13px"
+                    }}
+                >
+                    ⚡ AI recommendations are temporarily
+                    unavailable. Showing available job matches.
+                </div>
+
+            )}
 
 
             {/* ================= SEARCH ================= */}
@@ -88,7 +214,9 @@ export default function Jobs() {
                     type="text"
                     placeholder="Search jobs, companies or locations..."
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    onChange={(e) =>
+                        setSearch(e.target.value)
+                    }
                 />
 
             </div>
@@ -106,7 +234,7 @@ export default function Jobs() {
 
                     <div>
 
-                        <p>Total Jobs</p>
+                        <p>Recommended Jobs</p>
 
                         <h2>
                             {jobs.length}
@@ -166,11 +294,12 @@ export default function Jobs() {
                     <div>
 
                         <h2>
-                            Recommended Jobs
+                            AI Recommended Jobs
                         </h2>
 
                         <p>
-                            Opportunities selected based on your profile.
+                            Jobs ranked using your profile,
+                            skills and semantic matching.
                         </p>
 
                     </div>
@@ -182,9 +311,28 @@ export default function Jobs() {
                 </div>
 
 
-                {/* ================= JOB CARDS ================= */}
+                {/* ================= LOADING ================= */}
 
-                {filteredJobs.length > 0 ? (
+                {loading ? (
+
+                    <div className="no-jobs">
+
+                        <div className="no-jobs-icon">
+                            🤖
+                        </div>
+
+                        <h3>
+                            Finding your best opportunities...
+                        </h3>
+
+                        <p>
+                            OfferForge AI is analyzing your
+                            profile and matching relevant jobs.
+                        </p>
+
+                    </div>
+
+                ) : filteredJobs.length > 0 ? (
 
                     <JobCard jobs={filteredJobs} />
 
@@ -201,7 +349,8 @@ export default function Jobs() {
                         </h3>
 
                         <p>
-                            Try searching for a different job title, company or location.
+                            Try searching for a different
+                            job title, company or location.
                         </p>
 
                     </div>
@@ -213,5 +362,4 @@ export default function Jobs() {
         </div>
 
     );
-
 }
