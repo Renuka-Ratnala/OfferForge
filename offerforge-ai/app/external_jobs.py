@@ -8,6 +8,7 @@ def fetch_remote_jobs(
     search: str | None = None,
     limit: int = 20
 ):
+
     params = {
         "limit": limit
     }
@@ -25,4 +26,42 @@ def fetch_remote_jobs(
 
     data = response.json()
 
-    return data.get("jobs", [])
+    jobs = data.get("jobs", [])
+
+    return jobs[:limit]
+
+
+def fetch_jobs_for_profile(
+    skills: str | None = None,
+    branch: str | None = None,
+    limit: int = 30
+):
+
+    search_terms = []
+
+    if skills:
+
+        skill_list = [
+            skill.strip()
+            for skill in skills.split(",")
+            if skill.strip()
+        ]
+
+        search_terms.extend(
+            skill_list[:5]
+        )
+
+    if branch:
+
+        search_terms.append(
+            branch
+        )
+
+    search_query = " ".join(
+        search_terms
+    ).strip()
+
+    return fetch_remote_jobs(
+        search=search_query or None,
+        limit=limit
+    )
