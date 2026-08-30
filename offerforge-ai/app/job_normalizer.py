@@ -1,7 +1,10 @@
 import re
 
 
-# Common technical skills we want to recognize
+# ============================================================
+# COMMON TECHNICAL SKILLS
+# ============================================================
+
 KNOWN_SKILLS = [
     "Java",
     "Python",
@@ -64,6 +67,47 @@ KNOWN_SKILLS = [
 ]
 
 
+# ============================================================
+# SALARY NORMALIZATION
+# ============================================================
+
+def normalize_salary(value):
+
+    if value is None:
+        return None
+
+    if isinstance(value, (int, float)):
+        return float(value)
+
+    value = str(value).strip()
+
+    if not value:
+        return None
+
+    try:
+        return float(value)
+    except ValueError:
+        pass
+
+    numbers = re.findall(
+        r"\d+(?:\.\d+)?",
+        value.replace(",", "")
+    )
+
+    if not numbers:
+        return None
+
+    try:
+        return float(numbers[0])
+
+    except (ValueError, TypeError):
+        return None
+
+
+# ============================================================
+# SKILL EXTRACTION
+# ============================================================
+
 def extract_skills(
     description: str,
     existing_skills: str = ""
@@ -92,7 +136,6 @@ def extract_skills(
 
             found_skills.append(skill)
 
-    # Remove duplicates while preserving order
     unique_skills = list(
         dict.fromkeys(found_skills)
     )
@@ -100,58 +143,149 @@ def extract_skills(
     return ", ".join(unique_skills)
 
 
+# ============================================================
+# JOB NORMALIZATION
+# ============================================================
+
 def normalize_job(job: dict) -> dict:
+
+    # --------------------------------------------------------
+    # Description
+    # --------------------------------------------------------
 
     description = (
         job.get("description")
         or ""
     )
 
+    # --------------------------------------------------------
+    # Existing skills
+    # --------------------------------------------------------
+
     existing_skills = (
         job.get("requiredSkills")
         or job.get("required_skills")
+        or job.get("tags")
         or ""
     )
+
+    # --------------------------------------------------------
+    # Extract skills
+    # --------------------------------------------------------
 
     extracted_skills = extract_skills(
         description,
         existing_skills
     )
 
+    # --------------------------------------------------------
+    # Salary
+    # --------------------------------------------------------
+
+    salary = normalize_salary(
+        job.get("salary")
+    )
+
+    # --------------------------------------------------------
+    # External ID
+    # --------------------------------------------------------
+
+    external_id = (
+        job.get("external_id")
+        or job.get("externalId")
+        or job.get("id")
+        or ""
+    )
+
+    # --------------------------------------------------------
+    # Source
+    # --------------------------------------------------------
+
+    source = (
+        job.get("source")
+        or "remotive"
+    )
+
+    # --------------------------------------------------------
+    # Job title
+    # --------------------------------------------------------
+
+    job_title = (
+        job.get("job_title")
+        or job.get("jobTitle")
+        or job.get("title")
+        or "Unknown"
+    )
+
+    # --------------------------------------------------------
+    # Company
+    # --------------------------------------------------------
+
+    company_name = (
+        job.get("company_name")
+        or job.get("companyName")
+        or job.get("company")
+        or "Unknown"
+    )
+
+    # --------------------------------------------------------
+    # Location
+    # --------------------------------------------------------
+
+    location = (
+        job.get("location")
+        or job.get("candidate_required_location")
+        or job.get("candidateRequiredLocation")
+        or "Remote"
+    )
+
+    # --------------------------------------------------------
+    # Job type
+    # --------------------------------------------------------
+
+    job_type = (
+        job.get("job_type")
+        or job.get("jobType")
+        or "Unknown"
+    )
+
+    # --------------------------------------------------------
+    # External URL
+    # --------------------------------------------------------
+
+    external_url = (
+        job.get("external_url")
+        or job.get("externalUrl")
+        or job.get("url")
+        or ""
+    )
+
+    # --------------------------------------------------------
+    # Final normalized job
+    # --------------------------------------------------------
+
     return {
 
         "external_id":
-            str(
-                job.get("external_id")
-                or job.get("id")
-                or ""
-            ),
+            str(external_id),
 
         "source":
-            job.get("source")
-            or "external",
+            source,
 
         "job_title":
-            job.get("job_title")
-            or job.get("title")
-            or "Unknown",
+            job_title,
 
         "company_name":
-            job.get("company_name")
-            or job.get("company")
-            or "Unknown",
+            company_name,
 
         "location":
-            job.get("location")
-            or "Remote",
+            location,
 
         "job_type":
-            job.get("job_type")
-            or job.get("jobType")
-            or "Unknown",
+            job_type,
 
         "salary":
-            job.get("salary"),
+            salary,
 
         "description":
             description,
@@ -160,7 +294,5 @@ def normalize_job(job: dict) -> dict:
             extracted_skills,
 
         "external_url":
-            job.get("external_url")
-            or job.get("url")
-            or ""
+            external_url
     }

@@ -1,315 +1,478 @@
-import re
+from app.database import get_connection
+from app.embeddings import create_embedding
+from app.external_jobs import fetch_remote_jobs
+from app.job_normalizer import normalize_job
 
 
 # ============================================================
-# COMMON TECHNICAL SKILLS
+# CREATE JOB TEXT FOR EMBEDDINGS
 # ============================================================
 
-KNOWN_SKILLS = [
-    "Java",
-    "Python",
-    "JavaScript",
-    "TypeScript",
-    "C++",
-    "C#",
-    "Go",
-    "Rust",
+def create_job_text(
+    job_title,
+    company_name,
+    location,
+    job_type,
+    salary,
+    description,
+    required_skills,
+    source=None,
+    url=None
+):
 
-    "Spring",
-    "Spring Boot",
-    "Django",
-    "Flask",
-    "FastAPI",
-    "Node.js",
-    "Express.js",
-    "React",
-    "Angular",
-    "Vue.js",
+    return f"""
+Job Title: {job_title}
 
-    "SQL",
-    "MySQL",
-    "PostgreSQL",
-    "MongoDB",
-    "Redis",
+Company: {company_name}
 
-    "Docker",
-    "Kubernetes",
-    "AWS",
-    "Azure",
-    "Google Cloud",
-    "GCP",
+Location: {location}
 
-    "Git",
-    "GitHub",
-    "Linux",
+Job Type: {job_type}
 
-    "REST API",
-    "GraphQL",
+Salary: {salary}
 
-    "Machine Learning",
-    "Deep Learning",
-    "PyTorch",
-    "TensorFlow",
-    "LangChain",
-    "LangGraph",
-    "RAG",
-    "Generative AI",
-    "LLM",
+Description:
+{description or ""}
 
-    "HTML",
-    "CSS",
-    "Tailwind CSS",
+Required Skills:
+{required_skills or ""}
 
-    "Pandas",
-    "NumPy",
-    "Scikit-learn",
-    "XGBoost"
-]
+Source:
+{source or ""}
+
+Job URL:
+{url or ""}
+""".strip()
 
 
 # ============================================================
-# SALARY NORMALIZATION
+# INDEX EXISTING DATABASE JOBS
 # ============================================================
 
-def normalize_salary(value):
+def embed_existing_jobs():
 
-    # No salary
-    if value is None:
-        return None
-
-    # Already numeric
-    if isinstance(value, (int, float)):
-        return float(value)
-
-    # Convert to string
-    value = str(value).strip()
-
-    # Empty salary
-    if not value:
-        return None
-
-    # Try direct numeric conversion
-    try:
-        return float(value)
-    except ValueError:
-        pass
-
-    # Salary ranges or text such as:
-    # "$50,000 - $70,000"
-    # "50000 - 70000 USD"
-    # "₹50000"
-    #
-    # Extract numeric values
-    numbers = re.findall(
-        r"\d+(?:\.\d+)?",
-        value.replace(",", "")
-    )
-
-    if not numbers:
-        return None
+    connection = get_connection()
 
     try:
-        # For a salary range, use the first numeric value.
-        # This keeps the database compatible with the
-        # existing DOUBLE PRECISION salary column.
-        return float(numbers[0])
 
-    except (ValueError, TypeError):
-        return None
+        with connection.cursor() as cursor:
+
+            cursor.execute(
+                """
+                SELECT
+                    j.id,
+                    j.job_title,
+                    c.company_name,
+                    j.location,
+                    j.job_type,
+                    j.salary,
+                    j.description,
+                    j.required_skills
+                FROM jobs j
+                JOIN companies c
+                    ON c.id = j.company_id
+                """
+            )
+
+            jobs = cursor.fetchall()
+
+            processed = 0
+
+            for job in jobs:
+
+                (
+                    job_id,
+                    job_title,
+                    company_name,
+                    location,
+                    job_type,
+                    salary,
+                    description,
+                    required_skills
+                ) = job
+
+                normalized = normalize_job({
+
+                    "job_title": job_title,
+
+                    "company_name": company_name,
+
+                    "location": location,
+
+                    "job_type": job_type,
+
+                    "salary": salary,
+
+                    "description": description,
+
+                    "required_skills": required_skills
+                })
+
+                cleaned_skills = normalized[
+                    "required_skills"
+                ]
+
+                if cleaned_skills:
+
+                    cursor.execute(
+                        """
+                        UPDATE jobs
+                        SET required_skills = %s
+                        WHERE id = %s
+                        """,
+                        (
+                            cleaned_skills,
+                            job_id
+                        )
+                    )
+
+                job_text = create_job_text(
+
+                    job_title=job_title,
+
+                    company_name=company_name,
+
+                    location=location,
+
+                    job_type=job_type,
+
+                    salary=salary,
+
+                    description=description,
+
+                    required_skills=cleaned_skills
+                )
+
+                embedding = create_embedding(
+                    job_text
+                )
+
+                cursor.execute(
+                    """
+                    INSERT INTO job_embeddings
+                    (
+                        job_id,
+                        job_text,
+                        embedding
+                    )
+                    VALUES
+                    (
+                        %s,
+                        %s,
+                        %s::vector
+                    )
+
+                    ON CONFLICT (job_id)
+                    DO UPDATE SET
+                        job_text =
+                            EXCLUDED.job_text,
+
+                        embedding =
+                            EXCLUDED.embedding
+                    """,
+                    (
+                        job_id,
+                        job_text,
+                        embedding
+                    )
+                )
+
+                processed += 1
+
+        connection.commit()
+
+        return processed
+
+    finally:
+
+        connection.close()
 
 
 # ============================================================
-# SKILL EXTRACTION
+# INGEST EXTERNAL JOBS
 # ============================================================
 
-def extract_skills(
-    description: str,
-    existing_skills: str = ""
-) -> str:
+def ingest_remote_jobs():
 
-    text = " ".join([
-        description or "",
-        existing_skills or ""
-    ])
-
-    text_lower = text.lower()
-
-    found_skills = []
-
-    for skill in KNOWN_SKILLS:
-
-        skill_lower = skill.lower()
-
-        pattern = (
-            r"(?<![a-zA-Z0-9])"
-            + re.escape(skill_lower)
-            + r"(?![a-zA-Z0-9])"
-        )
-
-        if re.search(pattern, text_lower):
-
-            found_skills.append(skill)
-
-    # Remove duplicates while preserving order
-    unique_skills = list(
-        dict.fromkeys(found_skills)
+    remote_jobs = fetch_remote_jobs(
+        limit=20
     )
 
-    return ", ".join(unique_skills)
+    connection = get_connection()
 
+    try:
 
-# ============================================================
-# JOB NORMALIZATION
-# ============================================================
+        with connection.cursor() as cursor:
 
-def normalize_job(job: dict) -> dict:
+            processed = 0
 
-    # --------------------------------------------------------
-    # Description
-    # --------------------------------------------------------
+            for raw_job in remote_jobs:
 
-    description = (
-        job.get("description")
-        or ""
-    )
+                normalized = normalize_job(
+                    raw_job
+                )
 
-    # --------------------------------------------------------
-    # Existing skills
-    # --------------------------------------------------------
+                external_id = normalized[
+                    "external_id"
+                ]
 
-    existing_skills = (
-        job.get("requiredSkills")
-        or job.get("required_skills")
-        or job.get("tags")
-        or ""
-    )
+                source = normalized[
+                    "source"
+                ]
 
-    # --------------------------------------------------------
-    # Extract skills from description + existing skills
-    # --------------------------------------------------------
+                # --------------------------------------------
+                # Check if job already exists
+                # --------------------------------------------
 
-    extracted_skills = extract_skills(
-        description,
-        existing_skills
-    )
+                cursor.execute(
+                    """
+                    SELECT id
+                    FROM jobs
+                    WHERE external_id = %s
+                    AND source = %s
+                    """,
+                    (
+                        external_id,
+                        source
+                    )
+                )
 
-    # --------------------------------------------------------
-    # Salary
-    # --------------------------------------------------------
+                existing_job = cursor.fetchone()
 
-    salary = normalize_salary(
-        job.get("salary")
-    )
+                # ============================================
+                # UPDATE EXISTING JOB
+                # ============================================
 
-    # --------------------------------------------------------
-    # External ID
-    # --------------------------------------------------------
+                if existing_job:
 
-    external_id = (
-        job.get("external_id")
-        or job.get("externalId")
-        or job.get("id")
-        or ""
-    )
+                    job_id = existing_job[0]
 
-    # --------------------------------------------------------
-    # Source
-    # --------------------------------------------------------
+                    cursor.execute(
+                        """
+                        UPDATE jobs
+                        SET
+                            job_title = %s,
+                            location = %s,
+                            job_type = %s,
+                            salary = %s,
+                            description = %s,
+                            required_skills = %s,
+                            external_url = %s
+                        WHERE id = %s
+                        """,
+                        (
+                            normalized["job_title"],
 
-    source = (
-        job.get("source")
-        or "remotive"
-    )
+                            normalized["location"],
 
-    # --------------------------------------------------------
-    # Job title
-    # --------------------------------------------------------
+                            normalized["job_type"],
 
-    job_title = (
-        job.get("job_title")
-        or job.get("jobTitle")
-        or job.get("title")
-        or "Unknown"
-    )
+                            normalized["salary"],
 
-    # --------------------------------------------------------
-    # Company
-    # --------------------------------------------------------
+                            normalized["description"],
 
-    company_name = (
-        job.get("company_name")
-        or job.get("companyName")
-        or job.get("company")
-        or "Unknown"
-    )
+                            normalized["required_skills"],
 
-    # --------------------------------------------------------
-    # Location
-    #
-    # Remotive uses candidate_required_location.
-    # --------------------------------------------------------
+                            normalized["external_url"],
 
-    location = (
-        job.get("location")
-        or job.get("candidate_required_location")
-        or job.get("candidateRequiredLocation")
-        or "Remote"
-    )
+                            job_id
+                        )
+                    )
 
-    # --------------------------------------------------------
-    # Job type
-    # --------------------------------------------------------
+                # ============================================
+                # CREATE NEW JOB
+                # ============================================
 
-    job_type = (
-        job.get("job_type")
-        or job.get("jobType")
-        or "Unknown"
-    )
+                else:
 
-    # --------------------------------------------------------
-    # External URL
-    # --------------------------------------------------------
+                    # ----------------------------------------
+                    # Find company
+                    # ----------------------------------------
 
-    external_url = (
-        job.get("external_url")
-        or job.get("externalUrl")
-        or job.get("url")
-        or ""
-    )
+                    cursor.execute(
+                        """
+                        SELECT id
+                        FROM companies
+                        WHERE company_name = %s
+                        """,
+                        (
+                            normalized["company_name"],
+                        )
+                    )
 
-    # --------------------------------------------------------
-    # Final normalized job
-    # --------------------------------------------------------
+                    company = cursor.fetchone()
 
-    return {
+                    if company:
 
-        "external_id":
-            str(external_id),
+                        company_id = company[0]
 
-        "source":
-            source,
+                    else:
 
-        "job_title":
-            job_title,
+                        cursor.execute(
+                            """
+                            INSERT INTO companies
+                            (
+                                company_name
+                            )
+                            VALUES (%s)
+                            RETURNING id
+                            """,
+                            (
+                                normalized[
+                                    "company_name"
+                                ],
+                            )
+                        )
 
-        "company_name":
-            company_name,
+                        company_id = (
+                            cursor.fetchone()[0]
+                        )
 
-        "location":
-            location,
+                    # ----------------------------------------
+                    # Insert job
+                    # ----------------------------------------
 
-        "job_type":
-            job_type,
+                    cursor.execute(
+                        """
+                        INSERT INTO jobs
+                        (
+                            job_title,
+                            location,
+                            job_type,
+                            salary,
+                            description,
+                            required_skills,
+                            external_id,
+                            source,
+                            external_url,
+                            company_id
+                        )
+                        VALUES
+                        (
+                            %s,
+                            %s,
+                            %s,
+                            %s,
+                            %s,
+                            %s,
+                            %s,
+                            %s,
+                            %s,
+                            %s
+                        )
+                        RETURNING id
+                        """,
+                        (
+                            normalized["job_title"],
 
-        "salary":
-            salary,
+                            normalized["location"],
 
-        "description":
-            description,
+                            normalized["job_type"],
 
-        "required_skills":
-            extracted_skills,
+                            normalized["salary"],
 
-        "external_url":
-            external_url
-    }
+                            normalized["description"],
+
+                            normalized["required_skills"],
+
+                            normalized["external_id"],
+
+                            normalized["source"],
+
+                            normalized["external_url"],
+
+                            company_id
+                        )
+                    )
+
+                    job_id = (
+                        cursor.fetchone()[0]
+                    )
+
+                # --------------------------------------------
+                # Build embedding text
+                # --------------------------------------------
+
+                job_text = create_job_text(
+
+                    job_title=
+                        normalized["job_title"],
+
+                    company_name=
+                        normalized["company_name"],
+
+                    location=
+                        normalized["location"],
+
+                    job_type=
+                        normalized["job_type"],
+
+                    salary=
+                        normalized["salary"],
+
+                    description=
+                        normalized["description"],
+
+                    required_skills=
+                        normalized["required_skills"],
+
+                    source=
+                        normalized["source"],
+
+                    url=
+                        normalized["external_url"]
+                )
+
+                # --------------------------------------------
+                # Create embedding
+                # --------------------------------------------
+
+                embedding = create_embedding(
+                    job_text
+                )
+
+                # --------------------------------------------
+                # Store/update embedding
+                # --------------------------------------------
+
+                cursor.execute(
+                    """
+                    INSERT INTO job_embeddings
+                    (
+                        job_id,
+                        job_text,
+                        embedding
+                    )
+                    VALUES
+                    (
+                        %s,
+                        %s,
+                        %s::vector
+                    )
+
+                    ON CONFLICT (job_id)
+                    DO UPDATE SET
+                        job_text =
+                            EXCLUDED.job_text,
+
+                        embedding =
+                            EXCLUDED.embedding
+                    """,
+                    (
+                        job_id,
+
+                        job_text,
+
+                        embedding
+                    )
+                )
+
+                processed += 1
+
+        connection.commit()
+
+        return processed
+
+    finally:
+
+        connection.close()
