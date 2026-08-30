@@ -86,6 +86,7 @@ def normalize_salary(value):
 
     try:
         return float(value)
+
     except ValueError:
         pass
 
@@ -159,7 +160,7 @@ def normalize_job(job: dict) -> dict:
     )
 
     # --------------------------------------------------------
-    # Existing skills
+    # Existing skills / tags
     # --------------------------------------------------------
 
     existing_skills = (
@@ -168,6 +169,17 @@ def normalize_job(job: dict) -> dict:
         or job.get("tags")
         or ""
     )
+
+    # Remotive returns tags as a list.
+    # Convert the list into a string before
+    # passing it to extract_skills().
+
+    if isinstance(existing_skills, list):
+
+        existing_skills = ", ".join(
+            str(skill)
+            for skill in existing_skills
+        )
 
     # --------------------------------------------------------
     # Extract skills
