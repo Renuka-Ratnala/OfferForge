@@ -1,10 +1,7 @@
 from app.database import get_connection
 from app.embeddings import create_embedding
 from app.external_jobs import fetch_remote_jobs
-from app.job_normalizer import (
-    normalize_job,
-    normalize_remotive_job
-)
+from app.job_normalizer import normalize_job
 
 
 # ============================================================
@@ -232,19 +229,11 @@ def ingest_remote_jobs():
             for raw_job in remote_jobs:
 
                 # --------------------------------------------
-                # Convert Remotive format
-                # --------------------------------------------
-
-                normalized = normalize_remotive_job(
-                    raw_job
-                )
-
-                # --------------------------------------------
-                # Normalize + extract skills
+                # Normalize external job
                 # --------------------------------------------
 
                 normalized = normalize_job(
-                    normalized
+                    raw_job
                 )
 
                 external_id = normalized[
@@ -401,7 +390,7 @@ def ingest_remote_jobs():
 
                             normalized["job_type"],
 
-                            None,
+                            normalized["salary"],
 
                             normalized["description"],
 
