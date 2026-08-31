@@ -21,6 +21,8 @@ class JobRecommendation(BaseModel):
 
     required_skills: Optional[str] = None
 
+    external_url: Optional[str] = None
+
     match_score: int = Field(
         ge=0,
         le=100

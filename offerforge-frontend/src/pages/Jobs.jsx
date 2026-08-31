@@ -48,6 +48,10 @@ export default function Jobs() {
             requiredSkills:
                 job.required_skills,
 
+            // NEW: REAL JOB APPLICATION URL
+            externalUrl:
+                job.external_url,
+
             matchScore:
                 job.match_score ?? 0,
 
@@ -93,24 +97,19 @@ export default function Jobs() {
                 response.data
             );
 
-
             const recommendations =
                 response.data?.recommendations || [];
 
-
             // Convert Python response to frontend format
-
             const normalizedJobs =
                 recommendations.map(
                     normalizeAIJob
                 );
 
-
             console.log(
                 "Normalized AI jobs:",
                 normalizedJobs
             );
-
 
             setJobs(
                 normalizedJobs
@@ -140,14 +139,12 @@ export default function Jobs() {
                     fallbackResponse.data
                 );
 
-
                 const fallbackJobs =
                     Array.isArray(
                         fallbackResponse.data
                     )
                         ? fallbackResponse.data
                         : fallbackResponse.data?.recommendations || [];
-
 
                 setJobs(
                     fallbackJobs

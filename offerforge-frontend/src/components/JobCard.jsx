@@ -19,6 +19,26 @@ export default function JobCard({ jobs = [] }) {
         );
     }
 
+    const handleApply = (job) => {
+
+        if (job.externalUrl) {
+
+            window.open(
+                job.externalUrl,
+                "_blank",
+                "noopener,noreferrer"
+            );
+
+        } else {
+
+            console.warn(
+                "No external application URL available for:",
+                job.jobTitle
+            );
+
+        }
+    };
+
     return (
         <div
             style={{
@@ -32,7 +52,8 @@ export default function JobCard({ jobs = [] }) {
                     key={job.jobId}
                     className="job-card"
                 >
-                    {/* Header */}
+
+                    {/* ================= HEADER ================= */}
 
                     <div className="job-header">
 
@@ -48,6 +69,7 @@ export default function JobCard({ jobs = [] }) {
 
                         </div>
 
+
                         <div
                             style={{
                                 display: "flex",
@@ -59,6 +81,7 @@ export default function JobCard({ jobs = [] }) {
                             <div className="match-badge">
                                 ⭐ {job.matchScore}% Match
                             </div>
+
 
                             <button
                                 className="details-btn"
@@ -79,13 +102,18 @@ export default function JobCard({ jobs = [] }) {
 
                     </div>
 
-                    {/* Job Info */}
+
+                    {/* ================= JOB INFO ================= */}
 
                     <div className="job-info">
 
-                        <span>📍 {job.location}</span>
+                        <span>
+                            📍 {job.location}
+                        </span>
 
-                        <span>💼 {job.jobType}</span>
+                        <span>
+                            💼 {job.jobType}
+                        </span>
 
                         <span>
                             💰 ₹
@@ -94,15 +122,20 @@ export default function JobCard({ jobs = [] }) {
 
                     </div>
 
-                    {/* Details */}
+
+                    {/* ================= DETAILS ================= */}
 
                     {selectedJob === job.jobId && (
 
                         <div className="details">
 
+                            {/* JOB DESCRIPTION */}
+
                             <div className="description-box">
 
-                                <h3>📄 Job Description</h3>
+                                <h3>
+                                    📄 Job Description
+                                </h3>
 
                                 <p>
                                     {job.description}
@@ -110,41 +143,60 @@ export default function JobCard({ jobs = [] }) {
 
                             </div>
 
-                            <h3>✅ Matched Skills</h3>
+
+                            {/* MATCHED SKILLS */}
+
+                            <h3>
+                                ✅ Matched Skills
+                            </h3>
 
                             <div className="skills">
 
-                                {job.matchedSkills.map((skill) => (
+                                {(job.matchedSkills || []).map(
+                                    (skill) => (
 
-                                    <span
-                                        key={skill}
-                                        className="skill-green"
-                                    >
-                                        {skill}
-                                    </span>
+                                        <span
+                                            key={skill}
+                                            className="skill-green"
+                                        >
+                                            {skill}
+                                        </span>
 
-                                ))}
+                                    )
+                                )}
 
                             </div>
 
-                            <h3 style={{ marginTop: "30px" }}>
+
+                            {/* MISSING SKILLS */}
+
+                            <h3
+                                style={{
+                                    marginTop: "30px"
+                                }}
+                            >
                                 ❌ Missing Skills
                             </h3>
 
                             <div className="skills">
 
-                                {job.missingSkills.map((skill) => (
+                                {(job.missingSkills || []).map(
+                                    (skill) => (
 
-                                    <span
-                                        key={skill}
-                                        className="skill-red"
-                                    >
-                                        {skill}
-                                    </span>
+                                        <span
+                                            key={skill}
+                                            className="skill-red"
+                                        >
+                                            {skill}
+                                        </span>
 
-                                ))}
+                                    )
+                                )}
 
                             </div>
+
+
+                            {/* AI CAREER ADVICE */}
 
                             <div className="ai-box">
 
@@ -156,12 +208,14 @@ export default function JobCard({ jobs = [] }) {
                                     {job.aiRecommendation}
                                 </p>
 
+
                                 <div
                                     style={{
                                         marginTop: "20px",
                                         fontWeight: "700"
                                     }}
                                 >
+
                                     🎯 Interview Chance :
 
                                     <span
@@ -178,6 +232,46 @@ export default function JobCard({ jobs = [] }) {
                                     </span>
 
                                 </div>
+
+                            </div>
+
+
+                            {/* ================= APPLY BUTTON ================= */}
+
+                            <div
+                                style={{
+                                    marginTop: "25px",
+                                    display: "flex",
+                                    justifyContent: "flex-end"
+                                }}
+                            >
+
+                                {job.externalUrl ? (
+
+                                    <button
+                                        className="details-btn"
+                                        onClick={() =>
+                                            handleApply(job)
+                                        }
+                                    >
+                                        🚀 View Job & Apply ↗
+                                    </button>
+
+                                ) : (
+
+                                    <button
+                                        className="details-btn"
+                                        disabled
+                                        title="Application link is not available"
+                                        style={{
+                                            opacity: 0.5,
+                                            cursor: "not-allowed"
+                                        }}
+                                    >
+                                        Application Link Unavailable
+                                    </button>
+
+                                )}
 
                             </div>
 

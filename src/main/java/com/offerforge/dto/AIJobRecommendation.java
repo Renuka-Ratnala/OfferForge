@@ -29,6 +29,9 @@ public class AIJobRecommendation {
     @JsonProperty("required_skills")
     private String requiredSkills;
 
+    @JsonProperty("external_url")
+    private String externalUrl;
+
     @JsonProperty("match_score")
     private Integer matchScore;
 

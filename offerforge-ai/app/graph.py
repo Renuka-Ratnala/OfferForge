@@ -143,6 +143,9 @@ Description:
 Required Skills:
 {job["required_skills"]}
 
+External URL:
+{job["external_url"]}
+
 Semantic Similarity:
 {job["similarity"]}
 """
@@ -229,6 +232,9 @@ def build_fallback_recommendations(
 
             "required_skills":
                 job["required_skills"],
+
+            "external_url":
+                job["external_url"],
 
             "match_score":
                 job["match_score"],
@@ -325,6 +331,9 @@ def generate_ai_response(state: CareerState):
             "required_skills":
                 job["required_skills"],
 
+            "external_url":
+                job["external_url"],
+
             "similarity":
                 similarity,
 
@@ -374,6 +383,9 @@ Description:
 
 Required Skills:
 {job["required_skills"]}
+
+External URL:
+{job["external_url"]}
 
 Semantic Similarity:
 {job["similarity"]:.4f}
@@ -430,6 +442,7 @@ IMPORTANT RULES
    - salary
    - description
    - required skills
+   - external URL
 
 3. Use the calculated match score provided for each job.
 
@@ -457,6 +470,9 @@ IMPORTANT RULES
 12. Use only the candidate and job information provided.
 
 13. Keep recommendations ordered by relevance.
+
+14. Preserve the exact external URL provided.
+    Do not invent, modify, or replace it.
 """
 
 
@@ -569,6 +585,10 @@ IMPORTANT RULES
 
         recommendation.required_skills = (
             original_job["required_skills"]
+        )
+
+        recommendation.external_url = (
+            original_job["external_url"]
         )
 
         recommendation.match_score = (

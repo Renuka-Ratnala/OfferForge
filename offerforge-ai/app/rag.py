@@ -39,6 +39,7 @@ def retrieve_jobs(
                     j.salary AS salary,
                     j.description AS description,
                     j.required_skills AS required_skills,
+                    j.external_url AS external_url,
 
                     1 - (
                         je.embedding <=> %s::vector
@@ -88,7 +89,9 @@ def retrieve_jobs(
 
                     "required_skills": row[7],
 
-                    "similarity": float(row[8])
+                    "external_url": row[8],
+
+                    "similarity": float(row[9])
                 })
 
             return jobs
