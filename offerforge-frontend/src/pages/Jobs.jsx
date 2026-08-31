@@ -11,71 +11,48 @@ export default function Jobs() {
     const [loading, setLoading] = useState(true);
     const [aiError, setAiError] = useState(false);
 
+
+    /* ============================================================
+       FETCH JOBS ON PAGE LOAD
+       ============================================================ */
+
     useEffect(() => {
         fetchJobs();
     }, []);
 
 
-    // ============================================================
-    // CONVERT PYTHON SNAKE_CASE → FRONTEND camelCase
-    // ============================================================
+    /* ============================================================
+       CONVERT PYTHON SNAKE_CASE → FRONTEND camelCase
+       ============================================================ */
 
     const normalizeAIJob = (job) => {
 
         return {
+            jobId: job.job_id,
+            jobTitle: job.job_title,
+            companyName: job.company_name,
+            location: job.location,
+            jobType: job.job_type,
+            salary: job.salary,
+            description: job.description,
+            requiredSkills: job.required_skills,
 
-            jobId:
-                job.job_id,
+            // Real-time application URL
+            externalUrl: job.external_url,
 
-            jobTitle:
-                job.job_title,
-
-            companyName:
-                job.company_name,
-
-            location:
-                job.location,
-
-            jobType:
-                job.job_type,
-
-            salary:
-                job.salary,
-
-            description:
-                job.description,
-
-            requiredSkills:
-                job.required_skills,
-
-            // NEW: REAL JOB APPLICATION URL
-            externalUrl:
-                job.external_url,
-
-            matchScore:
-                job.match_score ?? 0,
-
-            matchedSkills:
-                job.matched_skills || [],
-
-            missingSkills:
-                job.missing_skills || [],
-
-            aiRecommendation:
-                job.ai_recommendation,
-
-            interviewChance:
-                job.interview_chance,
-
-            reason:
-                job.reason
+            matchScore: job.match_score ?? 0,
+            matchedSkills: job.matched_skills || [],
+            missingSkills: job.missing_skills || [],
+            aiRecommendation: job.ai_recommendation,
+            interviewChance: job.interview_chance,
+            reason: job.reason
         };
     };
 
 
-    // ============================================================
-    // FETCH AI RECOMMENDATIONS
-    // ============================================================
+    /* ============================================================
+       FETCH AI RECOMMENDATIONS
+       ============================================================ */
 
     const fetchJobs = async () => {
 
@@ -100,7 +77,6 @@ export default function Jobs() {
             const recommendations =
                 response.data?.recommendations || [];
 
-            // Convert Python response to frontend format
             const normalizedJobs =
                 recommendations.map(
                     normalizeAIJob
@@ -111,9 +87,7 @@ export default function Jobs() {
                 normalizedJobs
             );
 
-            setJobs(
-                normalizedJobs
-            );
+            setJobs(normalizedJobs);
 
         } catch (err) {
 
@@ -123,9 +97,9 @@ export default function Jobs() {
             );
 
 
-            // ====================================================
-            // FALLBACK
-            // ====================================================
+            /* ====================================================
+               FALLBACK TO BACKEND JOB MATCHING
+               ==================================================== */
 
             try {
 
@@ -146,10 +120,7 @@ export default function Jobs() {
                         ? fallbackResponse.data
                         : fallbackResponse.data?.recommendations || [];
 
-                setJobs(
-                    fallbackJobs
-                );
-
+                setJobs(fallbackJobs);
                 setAiError(true);
 
             } catch (fallbackError) {
@@ -160,47 +131,45 @@ export default function Jobs() {
                 );
 
                 setJobs([]);
-
                 setAiError(true);
             }
+        }
 
-        } finally {
+        finally {
 
             setLoading(false);
         }
     };
 
 
-    // ============================================================
-    // SEARCH
-    // ============================================================
+    /* ============================================================
+       SEARCH
+       ============================================================ */
 
-    const filteredJobs =
-        jobs.filter((job) => {
+    const query = search.toLowerCase().trim();
 
-            const title =
-                job.jobTitle?.toLowerCase() || "";
+    const filteredJobs = jobs.filter((job) => {
 
-            const company =
-                job.companyName?.toLowerCase() || "";
+        const title =
+            job.jobTitle?.toLowerCase() || "";
 
-            const location =
-                job.location?.toLowerCase() || "";
+        const company =
+            job.companyName?.toLowerCase() || "";
 
-            const query =
-                search.toLowerCase().trim();
+        const location =
+            job.location?.toLowerCase() || "";
 
-            return (
-                title.includes(query) ||
-                company.includes(query) ||
-                location.includes(query)
-            );
-        });
+        return (
+            title.includes(query) ||
+            company.includes(query) ||
+            location.includes(query)
+        );
+    });
 
 
-    // ============================================================
-    // STATISTICS
-    // ============================================================
+    /* ============================================================
+       STATISTICS
+       ============================================================ */
 
     const bestMatch =
         jobs.length > 0
@@ -212,7 +181,6 @@ export default function Jobs() {
             )
             : 0;
 
-
     const highMatchJobs =
         jobs.filter(
             (job) =>
@@ -220,15 +188,17 @@ export default function Jobs() {
         ).length;
 
 
-    // ============================================================
-    // UI
-    // ============================================================
+    /* ============================================================
+       UI
+       ============================================================ */
 
     return (
 
         <div className="jobs-page">
 
-            {/* ================= HEADER ================= */}
+            {/* ====================================================
+               HEADER
+               ==================================================== */}
 
             <div className="jobs-header">
 
@@ -249,31 +219,25 @@ export default function Jobs() {
             </div>
 
 
-            {/* ================= AI STATUS ================= */}
+            {/* ====================================================
+               AI STATUS
+               ==================================================== */}
 
             {aiError && (
 
-                <div
-                    style={{
-                        marginBottom: "18px",
-                        padding: "12px 16px",
-                        borderRadius: "10px",
-                        background:
-                            "rgba(245, 158, 11, 0.10)",
-                        border:
-                            "1px solid rgba(245, 158, 11, 0.25)",
-                        color: "#fbbf24",
-                        fontSize: "13px"
-                    }}
-                >
+                <div className="ai-status-warning">
+
                     ⚡ AI recommendations are temporarily
                     unavailable. Showing available job matches.
+
                 </div>
 
             )}
 
 
-            {/* ================= SEARCH ================= */}
+            {/* ====================================================
+               SEARCH
+               ==================================================== */}
 
             <div className="jobs-search">
 
@@ -291,9 +255,14 @@ export default function Jobs() {
             </div>
 
 
-            {/* ================= STATS ================= */}
+            {/* ====================================================
+               STATISTICS
+               ==================================================== */}
 
             <div className="jobs-stats">
+
+
+                {/* RECOMMENDED JOBS */}
 
                 <div className="job-stat-card purple-stat">
 
@@ -316,6 +285,8 @@ export default function Jobs() {
                 </div>
 
 
+                {/* BEST MATCH */}
+
                 <div className="job-stat-card blue-stat">
 
                     <div className="job-stat-icon">
@@ -336,6 +307,8 @@ export default function Jobs() {
 
                 </div>
 
+
+                {/* HIGH MATCH */}
 
                 <div className="job-stat-card green-stat">
 
@@ -360,7 +333,9 @@ export default function Jobs() {
             </div>
 
 
-            {/* ================= JOB SECTION ================= */}
+            {/* ====================================================
+               JOB SECTION
+               ==================================================== */}
 
             <div className="jobs-section">
 
@@ -379,18 +354,23 @@ export default function Jobs() {
 
                     </div>
 
+
                     <span className="jobs-count">
 
                         {filteredJobs.length}
                         {" "}
-                        opportunities
+                        {filteredJobs.length === 1
+                            ? "opportunity"
+                            : "opportunities"}
 
                     </span>
 
                 </div>
 
 
-                {/* ================= LOADING ================= */}
+                {/* =================================================
+                   LOADING
+                   ================================================= */}
 
                 {loading ? (
 
@@ -441,6 +421,5 @@ export default function Jobs() {
             </div>
 
         </div>
-
     );
 }
