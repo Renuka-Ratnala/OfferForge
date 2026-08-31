@@ -12,11 +12,10 @@ def retrieve_jobs(
 ):
 
     if not query or not query.strip():
-
         return []
 
     # --------------------------------------------------------
-    # Create embedding for the candidate's search query
+    # Create embedding for candidate search query
     # --------------------------------------------------------
 
     query_embedding = create_embedding(
@@ -32,14 +31,14 @@ def retrieve_jobs(
             cursor.execute(
                 """
                 SELECT
-                    j.id,
-                    j.job_title,
-                    c.company_name,
-                    j.location,
-                    j.job_type,
-                    j.salary,
-                    j.description,
-                    j.required_skills,
+                    j.id AS job_id,
+                    j.job_title AS job_title,
+                    c.company_name AS company_name,
+                    j.location AS location,
+                    j.job_type AS job_type,
+                    j.salary AS salary,
+                    j.description AS description,
+                    j.required_skills AS required_skills,
 
                     1 - (
                         je.embedding <=> %s::vector
@@ -65,7 +64,32 @@ def retrieve_jobs(
                 )
             )
 
-            jobs = cursor.fetchall()
+            rows = cursor.fetchall()
+
+            jobs = []
+
+            for row in rows:
+
+                jobs.append({
+
+                    "job_id": row[0],
+
+                    "job_title": row[1],
+
+                    "company_name": row[2],
+
+                    "location": row[3],
+
+                    "job_type": row[4],
+
+                    "salary": row[5],
+
+                    "description": row[6],
+
+                    "required_skills": row[7],
+
+                    "similarity": float(row[8])
+                })
 
             return jobs
 

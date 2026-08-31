@@ -124,39 +124,27 @@ def build_rag_context(state: CareerState):
 
     for job in jobs:
 
-        (
-            job_id,
-            job_title,
-            company_name,
-            location,
-            job_type,
-            salary,
-            description,
-            required_skills,
-            similarity
-        ) = job
-
         job_context = f"""
-Job ID: {job_id}
+Job ID: {job["job_id"]}
 
-Job Title: {job_title}
+Job Title: {job["job_title"]}
 
-Company: {company_name}
+Company: {job["company_name"]}
 
-Location: {location}
+Location: {job["location"]}
 
-Job Type: {job_type}
+Job Type: {job["job_type"]}
 
-Salary: {salary}
+Salary: {job["salary"]}
 
 Description:
-{description}
+{job["description"]}
 
 Required Skills:
-{required_skills}
+{job["required_skills"]}
 
 Semantic Similarity:
-{similarity}
+{job["similarity"]}
 """
 
         context_parts.append(
@@ -299,30 +287,12 @@ def generate_ai_response(state: CareerState):
 
     for job in jobs[:5]:
 
-        (
-            job_id,
-            job_title,
-            company_name,
-            location,
-            job_type,
-            salary,
-            description,
-            required_skills,
-            similarity
-        ) = job
-
-        # ----------------------------------------------------
-        # Calculate skill overlap
-        # ----------------------------------------------------
+        similarity = job["similarity"]
 
         skill_overlap = calculate_skill_overlap_safe(
             candidate_skills,
-            required_skills or ""
+            job["required_skills"] or ""
         )
-
-        # ----------------------------------------------------
-        # Calculate grounded match score
-        # ----------------------------------------------------
 
         calculated_match_score = calculate_match_score(
             similarity,
@@ -332,28 +302,28 @@ def generate_ai_response(state: CareerState):
         prepared_jobs.append({
 
             "job_id":
-                job_id,
+                job["job_id"],
 
             "job_title":
-                job_title,
+                job["job_title"],
 
             "company_name":
-                company_name,
+                job["company_name"],
 
             "location":
-                location,
+                job["location"],
 
             "job_type":
-                job_type,
+                job["job_type"],
 
             "salary":
-                salary,
+                job["salary"],
 
             "description":
-                description,
+                job["description"],
 
             "required_skills":
-                required_skills,
+                job["required_skills"],
 
             "similarity":
                 similarity,
@@ -569,11 +539,6 @@ IMPORTANT RULES
 
             continue
 
-
-        # ----------------------------------------------------
-        # Preserve database job information
-        # ----------------------------------------------------
-
         recommendation.job_id = (
             original_job["job_id"]
         )
@@ -606,15 +571,9 @@ IMPORTANT RULES
             original_job["required_skills"]
         )
 
-
-        # ----------------------------------------------------
-        # Force our calculated match score
-        # ----------------------------------------------------
-
         recommendation.match_score = (
             original_job["match_score"]
         )
-
 
         final_recommendations.append(
             recommendation.model_dump()
