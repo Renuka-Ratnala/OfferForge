@@ -174,16 +174,18 @@ export default function JobCard({ jobs = [] }) {
                                    ================================================= */}
 
                                 <div className="description-box">
-
                                     <h3>
                                         📄 Job Description
                                     </h3>
 
-                                    <p>
-                                        {job.description ||
-                                            "No job description available."}
-                                    </p>
-
+                                    <div
+                                        className="job-description"
+                                        dangerouslySetInnerHTML={{
+                                            __html:
+                                                job.description ||
+                                                "<p>No job description available.</p>"
+                                        }}
+                                    />
                                 </div>
 
 

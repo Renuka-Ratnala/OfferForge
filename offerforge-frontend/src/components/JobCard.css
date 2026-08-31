@@ -508,4 +508,46 @@
     .apply-btn {
         width: 100%;
     }
+
+    /* ============================================================
+       JOB DESCRIPTION HTML
+       ============================================================ */
+
+    .job-description {
+        color: #CBD5E1;
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
+    .job-description p {
+        margin: 0 0 12px;
+    }
+
+    .job-description p:last-child {
+        margin-bottom: 0;
+    }
+
+    .job-description ul,
+    .job-description ol {
+        margin: 10px 0 14px;
+        padding-left: 22px;
+    }
+
+    .job-description li {
+        margin-bottom: 6px;
+    }
+
+    .job-description strong {
+        color: #F8FAFC;
+        font-weight: 700;
+    }
+
+    .job-description a {
+        color: #60A5FA;
+        text-decoration: none;
+    }
+
+    .job-description a:hover {
+        text-decoration: underline;
+    }
 }
