@@ -25,11 +25,28 @@ public class AIService {
             AIRecommendationRequest request
     ) {
 
-        return restClient.post()
-                .uri("/ai/chat")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(request)
-                .retrieve()
-                .body(AIRecommendationResponse.class);
+        try {
+
+            return restClient.post()
+                    .uri("/ai/chat")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(request)
+                    .retrieve()
+                    .body(AIRecommendationResponse.class);
+
+        } catch (Exception e) {
+
+            System.err.println(
+                    "========== AI SERVICE ERROR =========="
+            );
+
+            e.printStackTrace();
+
+            System.err.println(
+                    "======================================"
+            );
+
+            throw e;
+        }
     }
 }
