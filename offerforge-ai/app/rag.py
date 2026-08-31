@@ -55,6 +55,14 @@ def retrieve_jobs(
 
                 WHERE j.external_url IS NOT NULL
 
+                AND (
+                    LOWER(j.job_title) LIKE '%intern%'
+                    OR LOWER(j.job_title) LIKE '%graduate%'
+                    OR LOWER(j.job_title) LIKE '%trainee%'
+                    OR LOWER(j.job_title) LIKE '%entry%'
+                    OR LOWER(j.job_title) LIKE '%junior%'
+                )
+
                 ORDER BY
                     je.embedding <=> %s::vector
 
