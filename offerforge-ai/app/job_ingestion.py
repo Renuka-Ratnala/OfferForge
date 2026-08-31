@@ -46,7 +46,7 @@ Job URL:
 
 
 # ============================================================
-# INDEX EXISTING DATABASE JOBS
+# EMBED EXISTING JOBS
 # ============================================================
 
 def embed_existing_jobs():
@@ -76,43 +76,72 @@ def embed_existing_jobs():
 
             jobs = cursor.fetchall()
 
-            processed = 0
+        processed = 0
+        skipped = 0
 
-            for job in jobs:
+        for job in jobs:
 
-                (
-                    job_id,
-                    job_title,
-                    company_name,
-                    location,
-                    job_type,
-                    salary,
-                    description,
-                    required_skills
-                ) = job
+            (
+                job_id,
+                job_title,
+                company_name,
+                location,
+                job_type,
+                salary,
+                description,
+                required_skills
+            ) = job
 
-                normalized = normalize_job({
+            # ------------------------------------------------
+            # Check whether embedding already exists
+            # ------------------------------------------------
 
-                    "job_title": job_title,
+            with connection.cursor() as cursor:
 
-                    "company_name": company_name,
+                cursor.execute(
+                    """
+                    SELECT id
+                    FROM job_embeddings
+                    WHERE job_id = %s
+                    """,
+                    (job_id,)
+                )
 
-                    "location": location,
+                existing_embedding = cursor.fetchone()
 
-                    "job_type": job_type,
+            if existing_embedding:
 
-                    "salary": salary,
+                skipped += 1
+                continue
 
-                    "description": description,
+            # ------------------------------------------------
+            # Normalize existing job
+            # ------------------------------------------------
 
-                    "required_skills": required_skills
-                })
+            normalized = normalize_job({
 
-                cleaned_skills = normalized[
-                    "required_skills"
-                ]
+                "job_title": job_title,
 
-                if cleaned_skills:
+                "company_name": company_name,
+
+                "location": location,
+
+                "job_type": job_type,
+
+                "salary": salary,
+
+                "description": description,
+
+                "required_skills": required_skills
+            })
+
+            cleaned_skills = normalized[
+                "required_skills"
+            ]
+
+            if cleaned_skills:
+
+                with connection.cursor() as cursor:
 
                     cursor.execute(
                         """
@@ -126,26 +155,47 @@ def embed_existing_jobs():
                         )
                     )
 
-                job_text = create_job_text(
+            # ------------------------------------------------
+            # Create embedding
+            # ------------------------------------------------
 
-                    job_title=job_title,
+            job_text = create_job_text(
 
-                    company_name=company_name,
+                job_title=job_title,
 
-                    location=location,
+                company_name=company_name,
 
-                    job_type=job_type,
+                location=location,
 
-                    salary=salary,
+                job_type=job_type,
 
-                    description=description,
+                salary=salary,
 
-                    required_skills=cleaned_skills
-                )
+                description=description,
+
+                required_skills=cleaned_skills
+            )
+
+            try:
 
                 embedding = create_embedding(
                     job_text
                 )
+
+            except Exception as e:
+
+                print(
+                    f"Embedding failed for job "
+                    f"{job_id}: {str(e)}"
+                )
+
+                continue
+
+            # ------------------------------------------------
+            # Store embedding
+            # ------------------------------------------------
+
+            with connection.cursor() as cursor:
 
                 cursor.execute(
                     """
@@ -177,9 +227,15 @@ def embed_existing_jobs():
                     )
                 )
 
-                processed += 1
+            connection.commit()
 
-        connection.commit()
+            processed += 1
+
+        print(
+            f"Existing jobs embedding completed. "
+            f"{processed} jobs embedded, "
+            f"{skipped} already had embeddings."
+        )
 
         return processed
 
@@ -198,31 +254,37 @@ def ingest_remote_jobs():
         limit=20
     )
 
+    print(
+        f"Fetched {len(remote_jobs)} external jobs."
+    )
+
     connection = get_connection()
 
     try:
 
-        with connection.cursor() as cursor:
+        processed = 0
+        embedded = 0
+        embedding_failed = 0
 
-            processed = 0
+        for raw_job in remote_jobs:
 
-            for raw_job in remote_jobs:
+            normalized = normalize_job(
+                raw_job
+            )
 
-                normalized = normalize_job(
-                    raw_job
-                )
+            external_id = normalized[
+                "external_id"
+            ]
 
-                external_id = normalized[
-                    "external_id"
-                ]
+            source = normalized[
+                "source"
+            ]
 
-                source = normalized[
-                    "source"
-                ]
+            # =================================================
+            # SAVE JOB
+            # =================================================
 
-                # --------------------------------------------
-                # Check if job already exists
-                # --------------------------------------------
+            with connection.cursor() as cursor:
 
                 cursor.execute(
                     """
@@ -239,9 +301,9 @@ def ingest_remote_jobs():
 
                 existing_job = cursor.fetchone()
 
-                # ============================================
+                # --------------------------------------------
                 # UPDATE EXISTING JOB
-                # ============================================
+                # --------------------------------------------
 
                 if existing_job:
 
@@ -279,15 +341,11 @@ def ingest_remote_jobs():
                         )
                     )
 
-                # ============================================
-                # CREATE NEW JOB
-                # ============================================
+                # --------------------------------------------
+                # INSERT NEW JOB
+                # --------------------------------------------
 
                 else:
-
-                    # ----------------------------------------
-                    # Find company
-                    # ----------------------------------------
 
                     cursor.execute(
                         """
@@ -327,10 +385,6 @@ def ingest_remote_jobs():
                         company_id = (
                             cursor.fetchone()[0]
                         )
-
-                    # ----------------------------------------
-                    # Insert job
-                    # ----------------------------------------
 
                     cursor.execute(
                         """
@@ -389,87 +443,134 @@ def ingest_remote_jobs():
                         cursor.fetchone()[0]
                     )
 
-                # --------------------------------------------
-                # Build embedding text
-                # --------------------------------------------
+            # ------------------------------------------------
+            # IMPORTANT:
+            # Commit the job BEFORE embedding.
+            # ------------------------------------------------
 
-                job_text = create_job_text(
+            connection.commit()
 
-                    job_title=
-                        normalized["job_title"],
+            processed += 1
 
-                    company_name=
-                        normalized["company_name"],
+            # =================================================
+            # CHECK EXISTING EMBEDDING
+            # =================================================
 
-                    location=
-                        normalized["location"],
+            with connection.cursor() as cursor:
 
-                    job_type=
-                        normalized["job_type"],
-
-                    salary=
-                        normalized["salary"],
-
-                    description=
-                        normalized["description"],
-
-                    required_skills=
-                        normalized["required_skills"],
-
-                    source=
-                        normalized["source"],
-
-                    url=
-                        normalized["external_url"]
+                cursor.execute(
+                    """
+                    SELECT id
+                    FROM job_embeddings
+                    WHERE job_id = %s
+                    """,
+                    (job_id,)
                 )
 
-                # --------------------------------------------
-                # Create embedding
-                # --------------------------------------------
+                existing_embedding = cursor.fetchone()
+
+            if existing_embedding:
+
+                continue
+
+            # =================================================
+            # CREATE EMBEDDING
+            # =================================================
+
+            job_text = create_job_text(
+
+                job_title=
+                    normalized["job_title"],
+
+                company_name=
+                    normalized["company_name"],
+
+                location=
+                    normalized["location"],
+
+                job_type=
+                    normalized["job_type"],
+
+                salary=
+                    normalized["salary"],
+
+                description=
+                    normalized["description"],
+
+                required_skills=
+                    normalized["required_skills"],
+
+                source=
+                    normalized["source"],
+
+                url=
+                    normalized["external_url"]
+            )
+
+            try:
 
                 embedding = create_embedding(
                     job_text
                 )
 
-                # --------------------------------------------
-                # Store/update embedding
-                # --------------------------------------------
+                with connection.cursor() as cursor:
 
-                cursor.execute(
-                    """
-                    INSERT INTO job_embeddings
-                    (
-                        job_id,
-                        job_text,
-                        embedding
+                    cursor.execute(
+                        """
+                        INSERT INTO job_embeddings
+                        (
+                            job_id,
+                            job_text,
+                            embedding
+                        )
+                        VALUES
+                        (
+                            %s,
+                            %s,
+                            %s::vector
+                        )
+
+                        ON CONFLICT (job_id)
+                        DO UPDATE SET
+                            job_text =
+                                EXCLUDED.job_text,
+
+                            embedding =
+                                EXCLUDED.embedding
+                        """,
+                        (
+                            job_id,
+
+                            job_text,
+
+                            embedding
+                        )
                     )
-                    VALUES
-                    (
-                        %s,
-                        %s,
-                        %s::vector
-                    )
 
-                    ON CONFLICT (job_id)
-                    DO UPDATE SET
-                        job_text =
-                            EXCLUDED.job_text,
+                connection.commit()
 
-                        embedding =
-                            EXCLUDED.embedding
-                    """,
-                    (
-                        job_id,
+                embedded += 1
 
-                        job_text,
+            except Exception as e:
 
-                        embedding
-                    )
+                embedding_failed += 1
+
+                print(
+                    f"Embedding failed for external "
+                    f"job {job_id}: {str(e)}"
                 )
 
-                processed += 1
+                # IMPORTANT:
+                # The job itself remains in Neon.
+                # We do NOT rollback the job insertion.
+                continue
 
-        connection.commit()
+        print(
+            f"External job ingestion completed. "
+            f"{processed} jobs saved, "
+            f"{embedded} embeddings created, "
+            f"{embedding_failed} embeddings failed."
+        )
 
         return processed
 
