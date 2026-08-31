@@ -53,6 +53,8 @@ def retrieve_jobs(
                 JOIN companies c
                     ON c.id = j.company_id
 
+                WHERE j.external_url IS NOT NULL
+
                 ORDER BY
                     je.embedding <=> %s::vector
 
