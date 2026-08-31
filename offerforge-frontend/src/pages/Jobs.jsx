@@ -15,27 +15,70 @@ export default function Jobs() {
         fetchJobs();
     }, []);
 
+
+    // ============================================================
+    // CONVERT PYTHON SNAKE_CASE → FRONTEND camelCase
+    // ============================================================
+
+    const normalizeAIJob = (job) => {
+
+        return {
+
+            jobId:
+                job.job_id,
+
+            jobTitle:
+                job.job_title,
+
+            companyName:
+                job.company_name,
+
+            location:
+                job.location,
+
+            jobType:
+                job.job_type,
+
+            salary:
+                job.salary,
+
+            description:
+                job.description,
+
+            requiredSkills:
+                job.required_skills,
+
+            matchScore:
+                job.match_score ?? 0,
+
+            matchedSkills:
+                job.matched_skills || [],
+
+            missingSkills:
+                job.missing_skills || [],
+
+            aiRecommendation:
+                job.ai_recommendation,
+
+            interviewChance:
+                job.interview_chance,
+
+            reason:
+                job.reason
+        };
+    };
+
+
+    // ============================================================
+    // FETCH AI RECOMMENDATIONS
+    // ============================================================
+
     const fetchJobs = async () => {
 
         setLoading(true);
         setAiError(false);
 
         try {
-
-            /*
-             * NEW AI + RAG RECOMMENDATIONS
-             *
-             * Spring Boot:
-             * /api/ai/recommend
-             *
-             * ↓
-             *
-             * Python AI Service
-             *
-             * ↓
-             *
-             * LangGraph + RAG + Gemini
-             */
 
             const response = await api.post(
                 "/ai/recommend",
@@ -50,10 +93,28 @@ export default function Jobs() {
                 response.data
             );
 
+
             const recommendations =
                 response.data?.recommendations || [];
 
-            setJobs(recommendations);
+
+            // Convert Python response to frontend format
+
+            const normalizedJobs =
+                recommendations.map(
+                    normalizeAIJob
+                );
+
+
+            console.log(
+                "Normalized AI jobs:",
+                normalizedJobs
+            );
+
+
+            setJobs(
+                normalizedJobs
+            );
 
         } catch (err) {
 
@@ -62,12 +123,10 @@ export default function Jobs() {
                 err
             );
 
-            /*
-             * FALLBACK
-             *
-             * If AI service is unavailable,
-             * use the existing recommendation system.
-             */
+
+            // ====================================================
+            // FALLBACK
+            // ====================================================
 
             try {
 
@@ -81,8 +140,17 @@ export default function Jobs() {
                     fallbackResponse.data
                 );
 
+
+                const fallbackJobs =
+                    Array.isArray(
+                        fallbackResponse.data
+                    )
+                        ? fallbackResponse.data
+                        : fallbackResponse.data?.recommendations || [];
+
+
                 setJobs(
-                    fallbackResponse.data || []
+                    fallbackJobs
                 );
 
                 setAiError(true);
@@ -95,6 +163,7 @@ export default function Jobs() {
                 );
 
                 setJobs([]);
+
                 setAiError(true);
             }
 
@@ -105,44 +174,43 @@ export default function Jobs() {
     };
 
 
-    /*
-     * SEARCH
-     *
-     * Search still happens on the frontend
-     * so users can quickly filter retrieved jobs.
-     */
+    // ============================================================
+    // SEARCH
+    // ============================================================
 
-    const filteredJobs = jobs.filter((job) => {
+    const filteredJobs =
+        jobs.filter((job) => {
 
-        const title =
-            job.jobTitle?.toLowerCase() || "";
+            const title =
+                job.jobTitle?.toLowerCase() || "";
 
-        const company =
-            job.companyName?.toLowerCase() || "";
+            const company =
+                job.companyName?.toLowerCase() || "";
 
-        const location =
-            job.location?.toLowerCase() || "";
+            const location =
+                job.location?.toLowerCase() || "";
 
-        const query =
-            search.toLowerCase().trim();
+            const query =
+                search.toLowerCase().trim();
 
-        return (
-            title.includes(query) ||
-            company.includes(query) ||
-            location.includes(query)
-        );
-    });
+            return (
+                title.includes(query) ||
+                company.includes(query) ||
+                location.includes(query)
+            );
+        });
 
 
-    /*
-     * STATISTICS
-     */
+    // ============================================================
+    // STATISTICS
+    // ============================================================
 
     const bestMatch =
         jobs.length > 0
             ? Math.max(
                 ...jobs.map(
-                    (job) => job.matchScore || 0
+                    (job) =>
+                        Number(job.matchScore) || 0
                 )
             )
             : 0;
@@ -151,9 +219,13 @@ export default function Jobs() {
     const highMatchJobs =
         jobs.filter(
             (job) =>
-                (job.matchScore || 0) >= 80
+                (Number(job.matchScore) || 0) >= 80
         ).length;
 
+
+    // ============================================================
+    // UI
+    // ============================================================
 
     return (
 
@@ -234,7 +306,9 @@ export default function Jobs() {
 
                     <div>
 
-                        <p>Recommended Jobs</p>
+                        <p>
+                            Recommended Jobs
+                        </p>
 
                         <h2>
                             {jobs.length}
@@ -253,7 +327,9 @@ export default function Jobs() {
 
                     <div>
 
-                        <p>Best Match</p>
+                        <p>
+                            Best Match
+                        </p>
 
                         <h2>
                             {bestMatch}%
@@ -272,7 +348,9 @@ export default function Jobs() {
 
                     <div>
 
-                        <p>High Match Jobs</p>
+                        <p>
+                            High Match Jobs
+                        </p>
 
                         <h2>
                             {highMatchJobs}
@@ -305,7 +383,11 @@ export default function Jobs() {
                     </div>
 
                     <span className="jobs-count">
-                        {filteredJobs.length} opportunities
+
+                        {filteredJobs.length}
+                        {" "}
+                        opportunities
+
                     </span>
 
                 </div>
@@ -334,7 +416,9 @@ export default function Jobs() {
 
                 ) : filteredJobs.length > 0 ? (
 
-                    <JobCard jobs={filteredJobs} />
+                    <JobCard
+                        jobs={filteredJobs}
+                    />
 
                 ) : (
 
