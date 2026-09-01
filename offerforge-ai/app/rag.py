@@ -52,12 +52,44 @@ def retrieve_jobs(
 
                 WHERE j.external_url IS NOT NULL
 
+                -- ------------------------------------------------
+                -- Exclude clearly senior / leadership positions
+                -- ------------------------------------------------
+
+                AND NOT (
+                    LOWER(j.job_title) LIKE '%%senior%%'
+                    OR LOWER(j.job_title) LIKE '%%lead%%'
+                    OR LOWER(j.job_title) LIKE '%%principal%%'
+                    OR LOWER(j.job_title) LIKE '%%staff%%'
+                    OR LOWER(j.job_title) LIKE '%%architect%%'
+                    OR LOWER(j.job_title) LIKE '%%director%%'
+                    OR LOWER(j.job_title) LIKE '%%vice president%%'
+                    OR LOWER(j.job_title) LIKE '%%head of%%'
+                    OR LOWER(j.job_title) LIKE '%%manager%%'
+                )
+
+                -- ------------------------------------------------
+                -- Keep software / technology-related positions
+                -- ------------------------------------------------
+
                 AND (
-                    LOWER(j.job_title) LIKE '%%intern%%'
-                    OR LOWER(j.job_title) LIKE '%%graduate%%'
-                    OR LOWER(j.job_title) LIKE '%%trainee%%'
-                    OR LOWER(j.job_title) LIKE '%%entry%%'
-                    OR LOWER(j.job_title) LIKE '%%junior%%'
+                    LOWER(j.job_title) LIKE '%%software%%'
+                    OR LOWER(j.job_title) LIKE '%%developer%%'
+                    OR LOWER(j.job_title) LIKE '%%engineer%%'
+                    OR LOWER(j.job_title) LIKE '%%programmer%%'
+                    OR LOWER(j.job_title) LIKE '%%backend%%'
+                    OR LOWER(j.job_title) LIKE '%%frontend%%'
+                    OR LOWER(j.job_title) LIKE '%%full stack%%'
+                    OR LOWER(j.job_title) LIKE '%%full-stack%%'
+                    OR LOWER(j.job_title) LIKE '%%java%%'
+                    OR LOWER(j.job_title) LIKE '%%python%%'
+                    OR LOWER(j.job_title) LIKE '%%data%%'
+                    OR LOWER(j.job_title) LIKE '%%cloud%%'
+                    OR LOWER(j.job_title) LIKE '%%machine learning%%'
+                    OR LOWER(j.job_title) LIKE '%%devops%%'
+                    OR LOWER(j.job_title) LIKE '%%qa%%'
+                    OR LOWER(j.job_title) LIKE '%%technology%%'
+                    OR LOWER(j.job_title) LIKE '%%technical%%'
                 )
 
                 ORDER BY
