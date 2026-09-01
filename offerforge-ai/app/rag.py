@@ -3,7 +3,7 @@ from app.embeddings import create_embedding
 
 
 # ============================================================
-# RETRIEVE RELEVANT JOBS
+# RETRIEVE RELEVANT EARLY-CAREER JOBS
 # ============================================================
 
 def retrieve_jobs(
@@ -54,6 +54,14 @@ def retrieve_jobs(
                     ON c.id = j.company_id
 
                 WHERE j.external_url IS NOT NULL
+
+                AND (
+                    LOWER(j.job_title) LIKE '%intern%'
+                    OR LOWER(j.job_title) LIKE '%graduate%'
+                    OR LOWER(j.job_title) LIKE '%trainee%'
+                    OR LOWER(j.job_title) LIKE '%entry%'
+                    OR LOWER(j.job_title) LIKE '%junior%'
+                )
 
                 ORDER BY
                     je.embedding <=> %s::vector
