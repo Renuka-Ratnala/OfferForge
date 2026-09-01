@@ -18,9 +18,10 @@ def retrieve_jobs(
     # Create embedding for candidate search query
     # --------------------------------------------------------
 
-    query_embedding = create_embedding(
-        query
-    )
+    query_embedding = create_embedding(query)
+
+    if not query_embedding:
+        return []
 
     connection = get_connection()
 
@@ -28,22 +29,18 @@ def retrieve_jobs(
 
         with connection.cursor() as cursor:
 
-            cursor.execute(
-                """
+            sql = """
                 SELECT
-                    j.id AS job_id,
-                    j.job_title AS job_title,
-                    c.company_name AS company_name,
-                    j.location AS location,
-                    j.job_type AS job_type,
-                    j.salary AS salary,
-                    j.description AS description,
-                    j.required_skills AS required_skills,
-                    j.external_url AS external_url,
-
-                    1 - (
-                        je.embedding <=> %s::vector
-                    ) AS similarity
+                    j.id,
+                    j.job_title,
+                    c.company_name,
+                    j.location,
+                    j.job_type,
+                    j.salary,
+                    j.description,
+                    j.required_skills,
+                    j.external_url,
+                    1 - (je.embedding <=> %s::vector) AS similarity
 
                 FROM job_embeddings je
 
@@ -67,7 +64,10 @@ def retrieve_jobs(
                     je.embedding <=> %s::vector
 
                 LIMIT %s
-                """,
+            """
+
+            cursor.execute(
+                sql,
                 (
                     query_embedding,
                     query_embedding,
@@ -82,25 +82,15 @@ def retrieve_jobs(
             for row in rows:
 
                 jobs.append({
-
                     "job_id": row[0],
-
                     "job_title": row[1],
-
                     "company_name": row[2],
-
                     "location": row[3],
-
                     "job_type": row[4],
-
                     "salary": row[5],
-
                     "description": row[6],
-
                     "required_skills": row[7],
-
                     "external_url": row[8],
-
                     "similarity": float(row[9])
                 })
 
