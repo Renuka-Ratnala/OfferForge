@@ -250,8 +250,15 @@ def embed_existing_jobs():
 
 def ingest_remote_jobs():
 
+    # --------------------------------------------------------
+    # Fetch a larger pool of real external jobs.
+    #
+    # RAG will later filter out unsuitable roles such as
+    # senior, leadership and service-desk positions.
+    # --------------------------------------------------------
+
     remote_jobs = fetch_remote_jobs(
-        limit=20
+        limit=100
     )
 
     print(
@@ -444,7 +451,6 @@ def ingest_remote_jobs():
                     )
 
             # ------------------------------------------------
-            # IMPORTANT:
             # Commit the job BEFORE embedding.
             # ------------------------------------------------
 
@@ -560,9 +566,10 @@ def ingest_remote_jobs():
                     f"job {job_id}: {str(e)}"
                 )
 
-                # IMPORTANT:
-                # The job itself remains in Neon.
-                # We do NOT rollback the job insertion.
+                # ------------------------------------------------
+                # Keep the job even if embedding fails.
+                # ------------------------------------------------
+
                 continue
 
         print(

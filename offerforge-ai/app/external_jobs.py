@@ -4,10 +4,17 @@ import httpx
 REMOTIVE_API_URL = "https://remotive.com/api/remote-jobs"
 
 
+# ============================================================
+# FETCH REMOTE JOBS
+# ============================================================
+
 def fetch_remote_jobs(
     search: str | None = None,
-    limit: int = 20
+    limit: int = 100
 ):
+
+    # Keep the requested limit within a sensible range.
+    limit = max(1, min(limit, 100))
 
     params = {
         "limit": limit
@@ -31,10 +38,14 @@ def fetch_remote_jobs(
     return jobs[:limit]
 
 
+# ============================================================
+# FETCH JOBS FOR USER PROFILE
+# ============================================================
+
 def fetch_jobs_for_profile(
     skills: str | None = None,
     branch: str | None = None,
-    limit: int = 30
+    limit: int = 100
 ):
 
     search_terms = []
