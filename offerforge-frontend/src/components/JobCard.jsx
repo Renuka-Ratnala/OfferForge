@@ -152,9 +152,11 @@ export default function JobCard({ jobs = [] }) {
                             </span>
 
                             <span>
-                                💰 ₹
-                                {Number(job.salary || 0)
-                                    .toLocaleString("en-IN")}
+                                💰{" "}
+                                {job.salary &&
+                                Number(job.salary) > 0
+                                    ? `₹${Number(job.salary).toLocaleString("en-IN")}`
+                                    : "Salary not disclosed"}
                             </span>
 
                         </div>
