@@ -28,10 +28,14 @@ public class Job {
 
     private Double salary;
 
-    @Column(length = 1000)
+    // ==============================
+    // Job Description
+    // ==============================
+
+    @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(length = 1000)
+    @Column(columnDefinition = "TEXT")
     private String requiredSkills;
 
     // ==============================
@@ -44,7 +48,7 @@ public class Job {
     @Column(length = 100)
     private String source;
 
-    @Column(length = 1000)
+    @Column(columnDefinition = "TEXT")
     private String externalUrl;
 
     // ==============================
