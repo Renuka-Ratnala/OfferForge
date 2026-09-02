@@ -52,9 +52,10 @@ def retrieve_jobs(
 
                 WHERE j.external_url IS NOT NULL
 
-                -- ------------------------------------------------
-                -- Exclude clearly senior / leadership positions
-                -- ------------------------------------------------
+
+                -- =================================================
+                -- EXCLUDE SENIOR / LEADERSHIP POSITIONS
+                -- =================================================
 
                 AND NOT (
                     LOWER(j.job_title) LIKE '%%senior%%'
@@ -68,9 +69,44 @@ def retrieve_jobs(
                     OR LOWER(j.job_title) LIKE '%%manager%%'
                 )
 
-                -- ------------------------------------------------
-                -- Keep software / technology-related positions
-                -- ------------------------------------------------
+
+                -- =================================================
+                -- EXCLUDE TIERED IT SUPPORT / SERVICE DESK ROLES
+                -- =================================================
+
+                AND NOT (
+                    LOWER(j.job_title) LIKE '%%service desk%%'
+                    OR LOWER(j.job_title) LIKE '%%helpdesk%%'
+                    OR LOWER(j.job_title) LIKE '%%help desk%%'
+                    OR LOWER(j.job_title) LIKE '%%tier i%%'
+                    OR LOWER(j.job_title) LIKE '%%tier ii%%'
+                    OR LOWER(j.job_title) LIKE '%%tier iii%%'
+                    OR LOWER(j.job_title) LIKE '%%tier 1%%'
+                    OR LOWER(j.job_title) LIKE '%%tier 2%%'
+                    OR LOWER(j.job_title) LIKE '%%tier 3%%'
+                )
+
+
+                -- =================================================
+                -- EXCLUDE OBVIOUSLY EXPERIENCE-HEAVY ROLES
+                -- =================================================
+
+                AND NOT (
+                    LOWER(COALESCE(j.description, '')) LIKE '%%6+ years%%'
+                    OR LOWER(COALESCE(j.description, '')) LIKE '%%5+ years%%'
+                    OR LOWER(COALESCE(j.description, '')) LIKE '%%4+ years%%'
+                    OR LOWER(COALESCE(j.description, '')) LIKE '%%3+ years%%'
+
+                    OR LOWER(COALESCE(j.description, '')) LIKE '%%6 years of experience%%'
+                    OR LOWER(COALESCE(j.description, '')) LIKE '%%5 years of experience%%'
+                    OR LOWER(COALESCE(j.description, '')) LIKE '%%4 years of experience%%'
+                    OR LOWER(COALESCE(j.description, '')) LIKE '%%3 years of experience%%'
+                )
+
+
+                -- =================================================
+                -- KEEP SOFTWARE / TECHNOLOGY-RELATED POSITIONS
+                -- =================================================
 
                 AND (
                     LOWER(j.job_title) LIKE '%%software%%'
@@ -91,6 +127,11 @@ def retrieve_jobs(
                     OR LOWER(j.job_title) LIKE '%%technology%%'
                     OR LOWER(j.job_title) LIKE '%%technical%%'
                 )
+
+
+                -- =================================================
+                -- RANK BY SEMANTIC SIMILARITY
+                -- =================================================
 
                 ORDER BY
                     je.embedding <=> %s::vector
