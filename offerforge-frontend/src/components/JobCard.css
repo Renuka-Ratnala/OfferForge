@@ -243,17 +243,19 @@
    ============================================================ */
 
 .job-description {
-    color: #E2E8F0;
+    color: #E2E8F0 !important;
     font-size: 14px;
     line-height: 1.7;
 }
 
 
-/* Paragraphs */
+/* ============================================================
+   PARAGRAPHS
+   ============================================================ */
 
 .job-description p {
     margin: 0 0 14px;
-    color: #E2E8F0;
+    color: #E2E8F0 !important;
     font-size: 14px;
     line-height: 1.7;
 }
@@ -263,45 +265,53 @@
 }
 
 
-/* Lists */
+/* ============================================================
+   LISTS
+   ============================================================ */
 
 .job-description ul,
 .job-description ol {
     margin: 10px 0 16px;
     padding-left: 22px;
-    color: #E2E8F0;
+    color: #E2E8F0 !important;
 }
 
 .job-description li {
     margin-bottom: 8px;
-    color: #E2E8F0;
+    color: #E2E8F0 !important;
     font-size: 14px;
     line-height: 1.6;
 }
 
 
-/* Bold text */
+/* ============================================================
+   BOLD TEXT
+   ============================================================ */
 
 .job-description strong,
 .job-description b {
-    color: #F8FAFC;
+    color: #F8FAFC !important;
     font-weight: 700;
 }
 
 
-/* Links */
+/* ============================================================
+   LINKS
+   ============================================================ */
 
 .job-description a {
-    color: #60A5FA;
+    color: #60A5FA !important;
     text-decoration: underline;
 }
 
 .job-description a:hover {
-    color: #93C5FD;
+    color: #93C5FD !important;
 }
 
 
-/* Headings inside job description */
+/* ============================================================
+   HEADINGS INSIDE JOB DESCRIPTION
+   ============================================================ */
 
 .job-description h1,
 .job-description h2,
@@ -309,22 +319,34 @@
 .job-description h4,
 .job-description h5,
 .job-description h6 {
-    color: #F8FAFC;
+    color: #F8FAFC !important;
     margin-top: 18px;
     margin-bottom: 10px;
 }
 
 
-/* Other common HTML elements */
+/* ============================================================
+   OTHER COMMON HTML ELEMENTS
+   ============================================================ */
 
 .job-description span,
 .job-description div {
-    color: #E2E8F0;
+    color: #E2E8F0 !important;
 }
 
 .job-description em,
 .job-description i {
-    color: #CBD5E1;
+    color: #CBD5E1 !important;
+}
+
+
+/* ============================================================
+   IMAGES INSIDE JOB DESCRIPTION
+   ============================================================ */
+
+.job-description img {
+    max-width: 100%;
+    height: auto;
 }
 
 
