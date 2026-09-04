@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.offerforge.dto.InterviewEvaluationResponse;
 import com.offerforge.dto.InterviewQuestionResponse;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -20,13 +22,11 @@ public class AIInterviewService {
     private String apiKey;
 
     private final RestTemplate restTemplate;
-
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public AIInterviewService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
-
 
     // =========================================================
     // GEMINI REQUEST WITH RETRY
@@ -42,7 +42,6 @@ public class AIInterviewService {
         for (int attempt = 1; attempt <= maxAttempts; attempt++) {
 
             try {
-
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -87,7 +86,6 @@ public class AIInterviewService {
         );
     }
 
-
     // =========================================================
     // GENERATE INTERVIEW QUESTION
     // =========================================================
@@ -103,38 +101,37 @@ public class AIInterviewService {
                 "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key="
                         + apiKey;
 
-
         String prompt = """
-            You are OfferForge AI Interviewer conducting a 5-question mock interview.
+                You are OfferForge AI Interviewer conducting a 5-question mock interview.
 
-            Candidate role: %s
-            Interview type: %s
-            Difficulty: %s
-            Current question number: %d of 5
+                Candidate role: %s
+                Interview type: %s
+                Difficulty: %s
+                Current question number: %d of 5
 
-            Generate ONE interview question.
+                Generate ONE interview question.
 
-            Rules:
-            - Generate exactly one question.
-            - This is question %d of a 5-question interview.
-            - Make the question different from typical introductory questions when question number is greater than 1.
-            - Do not repeat the same question.
-            - Match the selected role.
-            - Match the interview type.
-            - Match the difficulty.
-            - Make it realistic for a software engineering interview.
-            - Do not give the answer.
-            - Do not add explanations.
-            - Return only the interview question.
+                Rules:
+                - Generate exactly one question.
+                - This is question %d of a 5-question interview.
+                - Make the question different from typical introductory questions when question number is greater than 1.
+                - Do not repeat the same question.
+                - Match the selected role.
+                - Match the interview type.
+                - Match the difficulty.
+                - Make it realistic for a software engineering interview.
+                - Do not give the answer.
+                - Do not add explanations.
+                - Return only the interview question.
 
-            Question progression:
-            Question 1: Fundamental or introductory concept.
-            Question 2: Practical application or problem-solving.
-            Question 3: Deeper technical reasoning.
-            Question 4: Real-world/project scenario.
-            Question 5: Challenging final question.
+                Question progression:
+                Question 1: Fundamental or introductory concept.
+                Question 2: Practical application or problem-solving.
+                Question 3: Deeper technical reasoning.
+                Question 4: Real-world/project scenario.
+                Question 5: Challenging final question.
 
-            """.formatted(
+                """.formatted(
                 role,
                 type,
                 difficulty,
@@ -142,82 +139,43 @@ public class AIInterviewService {
                 questionNumber
         );
 
+        Map<String, Object> text = new HashMap<>();
+        text.put("text", prompt);
 
-        Map<String, Object> text =
-                new HashMap<>();
+        Map<String, Object> part = new HashMap<>();
+        part.put("parts", List.of(text));
 
-        text.put(
-                "text",
-                prompt
-        );
-
-
-        Map<String, Object> part =
-                new HashMap<>();
-
-        part.put(
-                "parts",
-                List.of(text)
-        );
-
-
-        Map<String, Object> body =
-                new HashMap<>();
-
-        body.put(
-                "contents",
-                List.of(part)
-        );
-
+        Map<String, Object> body = new HashMap<>();
+        body.put("contents", List.of(part));
 
         try {
 
-            Map response =
-                    callGemini(
-                            url,
-                            body
-                    );
-
+            Map response = callGemini(url, body);
 
             List candidates =
-                    (List) response.get(
-                            "candidates"
-                    );
-
+                    (List) response.get("candidates");
 
             Map candidate =
                     (Map) candidates.get(0);
 
-
             Map content =
-                    (Map) candidate.get(
-                            "content"
-                    );
-
+                    (Map) candidate.get("content");
 
             List parts =
-                    (List) content.get(
-                            "parts"
-                    );
-
+                    (List) content.get("parts");
 
             Map answer =
                     (Map) parts.get(0);
 
-
             String question =
-                    answer.get(
-                                    "text"
-                            )
+                    answer.get("text")
                             .toString()
                             .trim();
-
 
             return new InterviewQuestionResponse(
                     question,
                     type
             );
-
 
         } catch (Exception e) {
 
@@ -237,7 +195,6 @@ public class AIInterviewService {
         }
     }
 
-
     // =========================================================
     // FALLBACK INTERVIEW QUESTIONS
     // =========================================================
@@ -253,7 +210,6 @@ public class AIInterviewService {
                 role == null
                         ? ""
                         : role.toLowerCase();
-
 
         if (
                 normalizedRole.contains("java")
@@ -284,7 +240,6 @@ public class AIInterviewService {
             }
         }
 
-
         if (
                 normalizedRole.contains("python")
                         || normalizedRole.contains("data")
@@ -314,7 +269,6 @@ public class AIInterviewService {
             }
         }
 
-
         switch (questionNumber) {
 
             case 1:
@@ -337,7 +291,6 @@ public class AIInterviewService {
         }
     }
 
-
     // =========================================================
     // EVALUATE INTERVIEW ANSWER
     // =========================================================
@@ -353,7 +306,6 @@ public class AIInterviewService {
         String url =
                 "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key="
                         + apiKey;
-
 
         String prompt = """
                 You are OfferForge AI Interview Evaluator.
@@ -411,129 +363,67 @@ public class AIInterviewService {
                 answer
         );
 
+        Map<String, Object> text = new HashMap<>();
+        text.put("text", prompt);
 
-        Map<String, Object> text =
-                new HashMap<>();
+        Map<String, Object> part = new HashMap<>();
+        part.put("parts", List.of(text));
 
-        text.put(
-                "text",
-                prompt
-        );
-
-
-        Map<String, Object> part =
-                new HashMap<>();
-
-        part.put(
-                "parts",
-                List.of(text)
-        );
-
-
-        Map<String, Object> generationConfig =
-                new HashMap<>();
-
+        Map<String, Object> generationConfig = new HashMap<>();
         generationConfig.put(
                 "responseMimeType",
                 "application/json"
         );
 
-
-        Map<String, Object> body =
-                new HashMap<>();
-
-        body.put(
-                "contents",
-                List.of(part)
-        );
-
-        body.put(
-                "generationConfig",
-                generationConfig
-        );
-
+        Map<String, Object> body = new HashMap<>();
+        body.put("contents", List.of(part));
+        body.put("generationConfig", generationConfig);
 
         try {
 
-            Map response =
-                    callGemini(
-                            url,
-                            body
-                    );
-
+            Map response = callGemini(url, body);
 
             List candidates =
-                    (List) response.get(
-                            "candidates"
-                    );
-
+                    (List) response.get("candidates");
 
             Map candidate =
                     (Map) candidates.get(0);
 
-
             Map content =
-                    (Map) candidate.get(
-                            "content"
-                    );
-
+                    (Map) candidate.get("content");
 
             List parts =
-                    (List) content.get(
-                            "parts"
-                    );
-
+                    (List) content.get("parts");
 
             Map result =
                     (Map) parts.get(0);
 
-
             String json =
-                    result.get(
-                                    "text"
-                            )
+                    result.get("text")
                             .toString()
                             .trim();
-
 
             return objectMapper.readValue(
                     json,
                     InterviewEvaluationResponse.class
             );
 
-
         } catch (Exception e) {
 
-            System.out.println(
-                    "Gemini unavailable. Using fallback evaluation."
+            System.err.println(
+                    "========== GEMINI EVALUATION ERROR =========="
             );
 
-            return createFallbackEvaluation();
+            e.printStackTrace();
+
+            System.err.println(
+                    "=============================================="
+            );
+
+            throw new RuntimeException(
+                    "AI interview evaluation is temporarily unavailable. Please try again later.",
+                    e
+            );
         }
     }
-
-
-    // =========================================================
-    // FALLBACK EVALUATION
-    // =========================================================
-
-    private InterviewEvaluationResponse createFallbackEvaluation() {
-
-        return new InterviewEvaluationResponse(
-                70,
-                70,
-                70,
-                70,
-                "Your answer was evaluated using OfferForge's fallback interview evaluator because the AI service was temporarily unavailable.",
-                List.of(
-                        "You attempted to address the question.",
-                        "Your response demonstrated relevant understanding."
-                ),
-                List.of(
-                        "Add more technical details.",
-                        "Structure your answer more clearly with examples."
-                )
-        );
-    }
-
 }
